@@ -1,0 +1,6 @@
+{
+  "name": "APLIKASI SAHABAT SPANJU - SMPN 7 Pasuruan",
+  "description": "Aplikasi Sahabat SPANJU (Sekolah Aman, Harmonis, Anti Bullying dan Tindak Kekerasan) UPT SMP Negeri 7 Pasuruan bersama Komunitas PASS TEMENAN.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

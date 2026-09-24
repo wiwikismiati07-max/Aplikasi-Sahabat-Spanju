@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>APLIKASI SAHABAT SPANJU - SMPN 7 Pasuruan</title>
+    <meta name="description" content="Aplikasi Sahabat SPANJU (Sekolah Aman, Harmonis, Anti Bullying dan Tindak Kekerasan) UPT SMP Negeri 7 Pasuruan bersama Komunitas PASS TEMENAN." />
+    <meta property="og:title" content="APLIKASI SAHABAT SPANJU - SMPN 7 Pasuruan" />
+    <meta property="og:description" content="Aplikasi Sahabat SPANJU (Sekolah Aman, Harmonis, Anti Bullying dan Tindak Kekerasan) UPT SMP Negeri 7 Pasuruan bersama Komunitas PASS TEMENAN." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co.com/pBbfS44d/LOGO-PASS-TEMENAN.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <script>
+      // Filter out benign Vite HMR websocket reconnection noise in dev container
+      (function() {
+        const origWarn = console.warn;
+        const origError = console.error;
+        const origLog = console.log;
+        const isViteNoise = (msg) => {
+          if (!msg) return false;
+          const str = String(msg);
+          return str.includes('[vite]') || str.includes('WebSocket') || str.includes('vite-hmr') || str.includes('failed to connect to websocket');
+        };
+        console.warn = function(...args) {
+          if (args.some(isViteNoise)) return;
+          origWarn.apply(console, args);
+        };
+        console.error = function(...args) {
+          if (args.some(isViteNoise)) return;
+          origError.apply(console, args);
+        };
+        console.log = function(...args) {
+          if (args.some(isViteNoise)) return;
+          origLog.apply(console, args);
+        };
+      })();
+    </script>
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased font-sans selection:bg-emerald-500 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
