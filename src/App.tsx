@@ -12,6 +12,7 @@ import {
   LogOut,
   ExternalLink,
   ChevronRight,
+  Database,
 } from 'lucide-react';
 import {
   ActiveTab,
@@ -49,6 +50,7 @@ import { fetchTableData, saveTableData, bulkReplaceTableData, deleteTableData } 
 import { Sidebar } from './components/Sidebar';
 import { LoginModal } from './components/LoginModal';
 import { InfografisWelcomeModal } from './components/InfografisWelcomeModal';
+import { SupabaseSqlModal } from './components/SupabaseSqlModal';
 import { PilihanMenuAppView } from './components/PilihanMenuAppView';
 import { ZonaHijauAnalyticsView } from './components/ZonaHijauAnalyticsView';
 import { PiketHarianView } from './components/PiketHarianView';
@@ -75,6 +77,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isInfografisOpen, setIsInfografisOpen] = useState(false);
+  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
 
   // Current User Session (Default Admin: Wiwik Ismiati, S.Pd)
   const [currentUser, setCurrentUser] = useState<UserProfile>({
@@ -195,7 +198,7 @@ export default function App() {
     localStorage.setItem('spanju_survei_v1', JSON.stringify(surveiList));
   }, [surveiList]);
 
-  // Try loading cloud data from Supabase asynchronously on initial mount
+  // Try loading cloud data from Supabase asynchronously on initial mount & periodic multi-user sync
   useEffect(() => {
     async function loadCloudData() {
       try {
@@ -239,6 +242,13 @@ export default function App() {
       }
     }
     loadCloudData();
+
+    // Auto-refresh multi-user database changes every 12 seconds
+    const interval = setInterval(() => {
+      loadCloudData();
+    }, 12000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'operator';
@@ -893,9 +903,14 @@ export default function App() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-2">
-            <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Database Cloud Multi-User Aktif
-            </span>
+            <button
+              type="button"
+              onClick={() => setIsSqlModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-full border border-emerald-300 transition-colors cursor-pointer shadow-2xs"
+            >
+              <Database className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Script SQL Supabase Multi-User</span>
+            </button>
             <a
               href="https://sites.google.com/view/berandapasstemenanspanju/home"
               target="_blank"
@@ -933,6 +948,12 @@ export default function App() {
           setIsInfografisOpen(false);
           setIsLoginModalOpen(true);
         }}
+      />
+
+      {/* Supabase SQL Setup Modal */}
+      <SupabaseSqlModal
+        isOpen={isSqlModalOpen}
+        onClose={() => setIsSqlModalOpen(false)}
       />
 
       {/* Offline Connectivity Indicator */}
