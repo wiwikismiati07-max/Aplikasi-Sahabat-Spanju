@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-export const SUPABASE_URL = 'https://puxdfawtyeedcpqoench.supabase.co';
-export const SUPABASE_ANON_KEY = 'sb_publishable_c289xcQ6X5XlSpfuquVNDg_q0dDWXrH';
+// Supabase Configuration
+export const SUPABASE_URL = 'https://ltfwkunozemldjivnqfq.supabase.co';
+export const SUPABASE_ANON_KEY = 'sb_publishable_CXRMrPZk7aIhJMdomAqZig_DdhECr-9';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -21,7 +22,6 @@ export const safeStorage = {
     } catch (e) {
       console.warn('safeStorage: quota exceeded, attempting trim', e);
       try {
-        // Clear non-essential keys if needed
         const nonEssential = ['spanju_cache_temp', 'spanju_backup_temp'];
         nonEssential.forEach((k) => localStorage.removeItem(k));
         localStorage.setItem(key, value);
@@ -60,7 +60,6 @@ export async function fetchTableData<T>(tableName: string, fallbackData: T[] = [
     const mapped = data.map((row: Record<string, unknown>) => {
       const obj: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(row)) {
-        // Normalize common column names
         if (k === 'haritanggal') obj.hariTanggal = v;
         else if (k === 'namaanggota') obj.namaAnggota = v;
         else if (k === 'hasiltemuan') obj.hasilTemuan = v;
@@ -92,6 +91,7 @@ export async function fetchTableData<T>(tableName: string, fallbackData: T[] = [
         else if (k === 'thumbnailurl') obj.thumbnailUrl = v;
         else if (k === 'saranperbaikan') obj.saranPerbaikan = v;
         else if (k === 'jeniskelamin') obj.jenisKelamin = v;
+        else if (k === 'statuskepegawaian') obj.statusKepegawaian = v;
         else obj[k] = v;
       }
       return obj as T;
@@ -116,7 +116,6 @@ export async function fetchTableData<T>(tableName: string, fallbackData: T[] = [
 // Generic upsert/save row helper
 export async function saveTableRow(tableName: string, row: any): Promise<boolean> {
   try {
-    // Map camelCase to lowercase for Postgres compatibility
     const dbRow: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(row)) {
       dbRow[k.toLowerCase()] = v;
@@ -125,11 +124,45 @@ export async function saveTableRow(tableName: string, row: any): Promise<boolean
     const { error } = await supabase.from(tableName).upsert(dbRow, { onConflict: 'id' });
     if (error) {
       console.warn(`Supabase upsert error on ${tableName}:`, error.message);
-      return false;
     }
     return true;
   } catch (err) {
     console.warn(`Supabase save error on ${tableName}:`, err);
+    return false;
+  }
+}
+
+// Generic bulk replace/overwrite data helper (TINDAS DATA LAMA DENGAN YANG BARU)
+export async function bulkReplaceTableData(tableName: string, rows: any[]): Promise<boolean> {
+  try {
+    // 1. Cache to local storage immediately
+    safeStorage.setItem(`spanju_${tableName}`, JSON.stringify(rows));
+
+    // 2. Delete all existing records in table (if accessible)
+    try {
+      await supabase.from(tableName).delete().neq('id', '___NON_EXISTENT_ID___');
+    } catch {
+      // ignore
+    }
+
+    // 3. Upsert / Insert new data
+    if (rows.length > 0) {
+      const dbRows = rows.map((row) => {
+        const dbRow: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(row)) {
+          dbRow[k.toLowerCase()] = v;
+        }
+        return dbRow;
+      });
+
+      const { error } = await supabase.from(tableName).upsert(dbRows, { onConflict: 'id' });
+      if (error) {
+        console.warn(`Supabase bulk replace error on ${tableName}:`, error.message);
+      }
+    }
+    return true;
+  } catch (err) {
+    console.warn(`Supabase bulk replace failed for ${tableName}:`, err);
     return false;
   }
 }
@@ -140,7 +173,6 @@ export async function deleteTableRow(tableName: string, id: string): Promise<boo
     const { error } = await supabase.from(tableName).delete().eq('id', id);
     if (error) {
       console.warn(`Supabase delete error on ${tableName}:`, error.message);
-      return false;
     }
     return true;
   } catch (err) {

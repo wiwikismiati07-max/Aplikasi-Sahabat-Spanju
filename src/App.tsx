@@ -43,7 +43,7 @@ import {
   initialMedia,
   initialSurvei,
 } from './data/initialData';
-import { fetchTableData, saveTableData } from './lib/api';
+import { fetchTableData, saveTableData, bulkReplaceTableData, deleteTableData } from './lib/api';
 
 // Components
 import { Sidebar } from './components/Sidebar';
@@ -388,12 +388,24 @@ export default function App() {
     saveTableData('master_siswa', siswa);
   };
 
-  const handleImportBulkSiswa = (imported: SiswaMaster[]) => {
-    setSiswaList((prev) => [...imported, ...prev]);
+  const handleImportBulkSiswa = (imported: SiswaMaster[], replaceAll = false) => {
+    if (replaceAll) {
+      setSiswaList(imported);
+      bulkReplaceTableData('master_siswa', imported);
+    } else {
+      setSiswaList((prev) => [...imported, ...prev]);
+      imported.forEach((s) => saveTableData('master_siswa', s));
+    }
+  };
+
+  const handleClearAllSiswa = () => {
+    setSiswaList([]);
+    bulkReplaceTableData('master_siswa', []);
   };
 
   const handleDeleteSiswa = (id: string) => {
     setSiswaList((prev) => prev.filter((s) => s.id !== id));
+    deleteTableData('master_siswa', id);
   };
 
   const handleAddGuru = (guru: GuruMaster) => {
@@ -401,12 +413,24 @@ export default function App() {
     saveTableData('master_guru', guru);
   };
 
-  const handleImportBulkGuru = (imported: GuruMaster[]) => {
-    setGuruList((prev) => [...imported, ...prev]);
+  const handleImportBulkGuru = (imported: GuruMaster[], replaceAll = false) => {
+    if (replaceAll) {
+      setGuruList(imported);
+      bulkReplaceTableData('master_guru', imported);
+    } else {
+      setGuruList((prev) => [...imported, ...prev]);
+      imported.forEach((g) => saveTableData('master_guru', g));
+    }
+  };
+
+  const handleClearAllGuru = () => {
+    setGuruList([]);
+    bulkReplaceTableData('master_guru', []);
   };
 
   const handleDeleteGuru = (id: string) => {
     setGuruList((prev) => prev.filter((g) => g.id !== id));
+    deleteTableData('master_guru', id);
   };
 
   const handleAddMedia = (data: Omit<MediaEdukasiItem, 'id'>) => {
@@ -725,6 +749,7 @@ export default function App() {
               siswaList={siswaList}
               onAddSiswa={handleAddSiswa}
               onImportBulkSiswa={handleImportBulkSiswa}
+              onClearAllSiswa={handleClearAllSiswa}
               onDeleteSiswa={handleDeleteSiswa}
               onOpenMenu={() => setActiveTab('menu_utama')}
               isAdmin={isAdmin}
@@ -736,6 +761,7 @@ export default function App() {
               guruList={guruList}
               onAddGuru={handleAddGuru}
               onImportBulkGuru={handleImportBulkGuru}
+              onClearAllGuru={handleClearAllGuru}
               onDeleteGuru={handleDeleteGuru}
               onOpenMenu={() => setActiveTab('menu_utama')}
               isAdmin={isAdmin}
