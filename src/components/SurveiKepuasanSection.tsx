@@ -29,7 +29,6 @@ interface SurveiKepuasanSectionProps {
   isCompactBanner?: boolean;
   onOpenFullSurvey?: () => void;
   onBackToMenu?: () => void;
-  onOpenMenuModal?: () => void;
 }
 
 export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
@@ -41,7 +40,6 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
   isCompactBanner = false,
   onOpenFullSurvey,
   onBackToMenu,
-  onOpenMenuModal,
 }) => {
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'operator';
 
@@ -472,10 +470,10 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
 
             {/* Action Buttons */}
             <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-              {(onBackToMenu || onOpenMenuModal) ? (
+              {onBackToMenu ? (
                 <button
                   type="button"
-                  onClick={onBackToMenu || onOpenMenuModal}
+                  onClick={onBackToMenu}
                   className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-200"
                 >
                   <ArrowLeft className="w-4 h-4 text-slate-600" />
@@ -495,11 +493,11 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
         </div>
 
         {/* Tombol Kembali ke Menu di bawah kotak formulir survey */}
-        {(onBackToMenu || onOpenMenuModal) && (
+        {onBackToMenu && (
           <div className="flex items-center justify-center sm:justify-start pt-1">
             <button
               type="button"
-              onClick={onBackToMenu || onOpenMenuModal}
+              onClick={onBackToMenu}
               className="inline-flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-300 hover:border-slate-400 rounded-2xl text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-emerald-600" />
@@ -652,11 +650,11 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
           </div>
 
           {/* Tombol Kembali ke Menu di bawah Rekapitulasi */}
-          {(onBackToMenu || onOpenMenuModal) && (
+          {onBackToMenu && (
             <div className="flex items-center justify-center sm:justify-start pt-1">
               <button
                 type="button"
-                onClick={onBackToMenu || onOpenMenuModal}
+                onClick={onBackToMenu}
                 className="inline-flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-300 hover:border-slate-400 rounded-2xl text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
               >
                 <ArrowLeft className="w-4 h-4 text-emerald-600" />

@@ -249,7 +249,7 @@ export const HotlineView: React.FC<HotlineViewProps> = ({
               JAM PELAYANAN KEDINASAN
             </span>
             <h4 className="text-sm font-black text-slate-900 mt-0.5">
-              Senin &ndash; Jumat: 06.30 &ndash; 15.00 WIB
+              Senin &ndash; Sabtu : 07.00 &ndash; 14.00 WIB
             </h4>
             <p className="text-xs text-slate-600 leading-relaxed mt-0.5">
               Layanan Hotline WhatsApp (085168700953) siap merespon pelaporan darurat 1x24 jam.

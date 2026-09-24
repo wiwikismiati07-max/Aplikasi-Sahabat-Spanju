@@ -15,6 +15,7 @@ import { CalendarDatePicker } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { StudentPickerModal } from './StudentPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface SPDamaiViewProps {
   spDamaiList: SPDamaiRecord[];
@@ -37,6 +38,8 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
   const [nomorSurat, setNomorSurat] = useState('421.3/088/SP-DAMAI/423.107.07/2026');
@@ -447,9 +450,8 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Hapus surat kesepakatan damai nomor ${item.nomorSurat}?`)) {
-                          onDeleteSPDamai(item.id);
-                        }
+                        setDeletingId(item.id);
+                        setDeletingLabel(`surat kesepakatan damai nomor ${item.nomorSurat}`);
                       }}
                       className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 rounded-lg text-xs font-medium transition-colors"
                       title="Hapus Dokumen"
@@ -589,6 +591,18 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
           </div>
         </OfficialReportModal>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteSPDamai(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

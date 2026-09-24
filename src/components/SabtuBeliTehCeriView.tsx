@@ -14,6 +14,7 @@ import { CeriRecord } from '../types';
 import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { OfficialReportModal } from './OfficialReportModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface SabtuBeliTehCeriViewProps {
   ceriList: CeriRecord[];
@@ -34,6 +35,8 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
   const [hariTanggal, setHariTanggal] = useState('Sabtu, 19 September 2026');
@@ -334,9 +337,8 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Hapus catatan Teh Ceri tanggal ${item.hariTanggal}?`)) {
-                          onDeleteCeri(item.id);
-                        }
+                        setDeletingId(item.id);
+                        setDeletingLabel(`catatan Teh Ceri tanggal ${item.hariTanggal}`);
                       }}
                       className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 rounded-lg text-xs font-medium transition-colors"
                       title="Hapus Catatan"
@@ -451,6 +453,18 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
           </div>
         </OfficialReportModal>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteCeri(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

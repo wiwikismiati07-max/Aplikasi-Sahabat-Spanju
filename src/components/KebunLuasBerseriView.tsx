@@ -15,6 +15,7 @@ import { KebunRecord, RTLItem } from '../types';
 import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { OfficialReportModal } from './OfficialReportModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface KebunLuasBerseriViewProps {
   kebunList: KebunRecord[];
@@ -35,6 +36,8 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
   const [hariTanggal, setHariTanggal] = useState('Kamis, 17 September 2026');
@@ -443,9 +446,8 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Hapus arsip Kebun Luas Berseri tanggal ${item.hariTanggal}?`)) {
-                          onDeleteKebun(item.id);
-                        }
+                        setDeletingId(item.id);
+                        setDeletingLabel(`arsip Kebun Luas Berseri tanggal ${item.hariTanggal}`);
                       }}
                       className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 rounded-lg text-xs font-medium transition-colors"
                       title="Hapus Catatan"
@@ -611,6 +613,18 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
           </div>
         </OfficialReportModal>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteKebun(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

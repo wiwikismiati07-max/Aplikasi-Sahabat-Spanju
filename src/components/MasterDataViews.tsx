@@ -18,6 +18,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { SiswaMaster, GuruMaster } from '../types';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 /* ====================================================================
  * MASTER DATA SISWA VIEW
@@ -45,6 +46,9 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
   const [selectedKelas, setSelectedKelas] = useState('Semua');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [pendingImportList, setPendingImportList] = useState<SiswaMaster[] | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
 
   // Form states
   const [nama, setNama] = useState('');
@@ -235,11 +239,7 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
           {isAdmin && onClearAllSiswa && siswaList.length > 0 && (
             <button
               type="button"
-              onClick={() => {
-                if (confirm('Apakah Anda yakin ingin MENGOSONGKAN / MENINDAS SEMUA DATA SISWA saat ini?')) {
-                  onClearAllSiswa();
-                }
-              }}
+              onClick={() => setIsClearAllModalOpen(true)}
               className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition-colors whitespace-nowrap cursor-pointer"
               title="Kosongkan seluruh data siswa"
             >
@@ -307,9 +307,8 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm(`Hapus data siswa "${s.nama}"?`)) {
-                              onDeleteSiswa(s.id);
-                            }
+                            setDeletingId(s.id);
+                            setDeletingLabel(`data siswa "${s.nama}"`);
                           }}
                           className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
                           title="Hapus"
@@ -492,6 +491,32 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
           </div>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteSiswa(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isClearAllModalOpen}
+        title="Kosongkan Semua Data Siswa"
+        message="Apakah Anda yakin ingin MENGOSONGKAN / MENINDAS SEMUA DATA SISWA saat ini?"
+        confirmLabel="Ya, Kosongkan Data"
+        onConfirm={() => {
+          if (onClearAllSiswa) {
+            onClearAllSiswa();
+          }
+          setIsClearAllModalOpen(false);
+        }}
+        onCancel={() => setIsClearAllModalOpen(false)}
+      />
     </div>
   );
 };
@@ -521,6 +546,9 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [pendingImportList, setPendingImportList] = useState<GuruMaster[] | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
+  const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
 
   // Form states
   const [nama, setNama] = useState('');
@@ -693,11 +721,7 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
         {isAdmin && onClearAllGuru && guruList.length > 0 && (
           <button
             type="button"
-            onClick={() => {
-              if (confirm('Apakah Anda yakin ingin MENGOSONGKAN / MENINDAS SEMUA DATA GURU & SATGAS saat ini?')) {
-                onClearAllGuru();
-              }
-            }}
+            onClick={() => setIsClearAllModalOpen(true)}
             className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition-colors whitespace-nowrap cursor-pointer"
             title="Kosongkan seluruh data guru"
           >
@@ -754,9 +778,8 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm(`Hapus data guru "${g.nama}"?`)) {
-                              onDeleteGuru(g.id);
-                            }
+                            setDeletingId(g.id);
+                            setDeletingLabel(`data guru "${g.nama}"`);
                           }}
                           className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
                           title="Hapus"
@@ -936,6 +959,32 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
           </div>
         </div>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteGuru(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
+
+      <ConfirmDeleteModal
+        isOpen={isClearAllModalOpen}
+        title="Kosongkan Semua Data Guru"
+        message="Apakah Anda yakin ingin MENGOSONGKAN / MENINDAS SEMUA DATA GURU & SATGAS saat ini?"
+        confirmLabel="Ya, Kosongkan Data"
+        onConfirm={() => {
+          if (onClearAllGuru) {
+            onClearAllGuru();
+          }
+          setIsClearAllModalOpen(false);
+        }}
+        onCancel={() => setIsClearAllModalOpen(false)}
+      />
     </div>
   );
 };

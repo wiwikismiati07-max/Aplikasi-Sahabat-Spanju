@@ -13,6 +13,7 @@ import {
   Search,
 } from 'lucide-react';
 import { MediaEdukasiItem } from '../types';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface MediaEdukasiViewProps {
   mediaList: MediaEdukasiItem[];
@@ -32,6 +33,8 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedKategori, setSelectedKategori] = useState('Semua');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form
   const [judul, setJudul] = useState('');
@@ -308,11 +311,10 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm(`Hapus media edukasi "${m.judul}"?`)) {
-                        onDeleteMedia(m.id);
-                      }
+                      setDeletingId(m.id);
+                      setDeletingLabel(`media edukasi "${m.judul}"`);
                     }}
-                    className="p-1 text-slate-400 hover:text-rose-600 rounded"
+                    className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
                     title="Hapus Media"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -323,6 +325,18 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
           );
         })}
       </div>
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteMedia(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

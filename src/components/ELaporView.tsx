@@ -18,6 +18,7 @@ import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { StudentPickerModal } from './StudentPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface ELaporViewProps {
   eLaporList: ELaporRecord[];
@@ -42,6 +43,8 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
   const [hariTanggal, setHariTanggal] = useState('Senin, 21 September 2026');
@@ -591,9 +594,8 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Hapus laporan kasus ${item.kodeLaporan}?`)) {
-                          onDeleteELapor(item.id);
-                        }
+                        setDeletingId(item.id);
+                        setDeletingLabel(`laporan kasus ${item.kodeLaporan}`);
                       }}
                       className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 rounded-lg text-xs font-medium transition-colors"
                       title="Hapus Laporan"
@@ -726,6 +728,18 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
           </div>
         </OfficialReportModal>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteELapor(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

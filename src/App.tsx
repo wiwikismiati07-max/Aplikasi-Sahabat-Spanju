@@ -67,17 +67,14 @@ import { HotlineView } from './components/HotlineView';
 import { SurveiKepuasanSection } from './components/SurveiKepuasanSection';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
-import { PilihanMenuModal } from './components/PilihanMenuModal';
-
 export default function App() {
-  // Current active navigation tab (Default to 'bagan_alur' for Bagan & Alur Penanganan)
-  const [activeTab, setActiveTab] = useState<ActiveTab>('bagan_alur');
+  // Current active navigation tab (Default to 'infografis' for Infografis Aplikasi SPANJU)
+  const [activeTab, setActiveTab] = useState<ActiveTab>('infografis');
 
   // Sidebar & Modals
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isInfografisOpen, setIsInfografisOpen] = useState(false);
-  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
 
   // Current User Session (Default Admin: Wiwik Ismiati, S.Pd)
   const [currentUser, setCurrentUser] = useState<UserProfile>({
@@ -202,6 +199,9 @@ export default function App() {
   useEffect(() => {
     async function loadCloudData() {
       try {
+        const cloudKelas = await fetchTableData<KelasZona>('kelas_zona');
+        if (cloudKelas && cloudKelas.length > 0) setKelasList(cloudKelas);
+
         const cloudPiket = await fetchTableData<PiketRecord>('piket_harian');
         if (cloudPiket && cloudPiket.length > 0) setPiketList(cloudPiket);
 
@@ -229,6 +229,9 @@ export default function App() {
         const cloudGuru = await fetchTableData<GuruMaster>('master_guru');
         if (cloudGuru && cloudGuru.length > 0) setGuruList(cloudGuru);
 
+        const cloudMedia = await fetchTableData<MediaEdukasiItem>('media_edukasi');
+        if (cloudMedia && cloudMedia.length > 0) setMediaList(cloudMedia);
+
         const cloudSurvei = await fetchTableData<SurveiKepuasanRecord>('survei_kepuasan');
         if (cloudSurvei && cloudSurvei.length > 0) setSurveiList(cloudSurvei);
       } catch {
@@ -240,11 +243,14 @@ export default function App() {
 
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'operator';
 
-  // Handler helpers
+  // Handler helpers with synchronized Supabase operations
   const handleUpdateKelas = (kelasName: string, updated: Partial<KelasZona>) => {
-    setKelasList((prev) =>
-      prev.map((k) => (k.kelas === kelasName ? { ...k, ...updated } : k))
-    );
+    setKelasList((prev) => {
+      const next = prev.map((k) => (k.kelas === kelasName ? { ...k, ...updated } : k));
+      const updatedItem = next.find((k) => k.kelas === kelasName);
+      if (updatedItem) saveTableData('kelas_zona', updatedItem);
+      return next;
+    });
   };
 
   const handleAddPiket = async (data: Omit<PiketRecord, 'id' | 'createdAt'>) => {
@@ -258,11 +264,12 @@ export default function App() {
   };
 
   const handleUpdatePiket = (id: string, data: Partial<PiketRecord>) => {
-    setPiketList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = piketList.find((p) => p.id === id);
-    if (item) saveTableData('piket_harian', { ...item, ...data });
+    setPiketList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('piket_harian', updatedItem);
+      return next;
+    });
   };
 
   const handleDeletePiket = (id: string) => {
@@ -281,11 +288,12 @@ export default function App() {
   };
 
   const handleUpdateCeri = (id: string, data: Partial<CeriRecord>) => {
-    setCeriList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = ceriList.find((c) => c.id === id);
-    if (item) saveTableData('sabtu_beli_teh_ceri', { ...item, ...data });
+    setCeriList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('sabtu_beli_teh_ceri', updatedItem);
+      return next;
+    });
   };
 
   const handleDeleteCeri = (id: string) => {
@@ -304,11 +312,12 @@ export default function App() {
   };
 
   const handleUpdateKebun = (id: string, data: Partial<KebunRecord>) => {
-    setKebunList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = kebunList.find((k) => k.id === id);
-    if (item) saveTableData('kebun_luas_berseri', { ...item, ...data });
+    setKebunList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('kebun_luas_berseri', updatedItem);
+      return next;
+    });
   };
 
   const handleDeleteKebun = (id: string) => {
@@ -327,11 +336,12 @@ export default function App() {
   };
 
   const handleUpdateSerasi = (id: string, data: Partial<SerasiRecord>) => {
-    setSerasiList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = serasiList.find((s) => s.id === id);
-    if (item) saveTableData('senandung_serasi', { ...item, ...data });
+    setSerasiList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('senandung_serasi', updatedItem);
+      return next;
+    });
   };
 
   const handleDeleteSerasi = (id: string) => {
@@ -350,11 +360,12 @@ export default function App() {
   };
 
   const handleUpdateELapor = (id: string, data: Partial<ELaporRecord>) => {
-    setELaporList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = eLaporList.find((e) => e.id === id);
-    if (item) saveTableData('e_lapor', { ...item, ...data });
+    setELaporList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('e_lapor', updatedItem);
+      return next;
+    });
   };
 
   const handleDeleteELapor = (id: string) => {
@@ -373,11 +384,12 @@ export default function App() {
   };
 
   const handleUpdateSPDamai = (id: string, data: Partial<SPDamaiRecord>) => {
-    setSPDamaiList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = spDamaiList.find((s) => s.id === id);
-    if (item) saveTableData('sp_damai', { ...item, ...data });
+    setSPDamaiList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('sp_damai', updatedItem);
+      return next;
+    });
   };
 
   const handleDeleteSPDamai = (id: string) => {
@@ -396,11 +408,12 @@ export default function App() {
   };
 
   const handleUpdateTamu = (id: string, data: Partial<BukuTamuRecord>) => {
-    setTamuList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = tamuList.find((t) => t.id === id);
-    if (item) saveTableData('buku_tamu', { ...item, ...data });
+    setTamuList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('buku_tamu', updatedItem);
+      return next;
+    });
   };
 
   const handleDeleteTamu = (id: string) => {
@@ -480,11 +493,12 @@ export default function App() {
   };
 
   const handleUpdateSurvei = (id: string, data: Partial<SurveiKepuasanRecord>) => {
-    setSurveiList((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
-    );
-    const item = surveiList.find((s) => s.id === id);
-    if (item) saveTableData('survei_kepuasan', { ...item, ...data });
+    setSurveiList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('survei_kepuasan', updatedItem);
+      return next;
+    });
   };
 
   const handleDeleteSurvei = (id: string) => {
@@ -575,9 +589,9 @@ export default function App() {
             {/* Pilihan Menu Aplikasi button (Solid Blue) */}
             <button
               type="button"
-              onClick={() => setIsMenuModalOpen(true)}
+              onClick={() => setActiveTab('menu_utama')}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
-              title="Buka Popup Pilihan Menu Aplikasi"
+              title="Akses Seluruh Pilihan Menu Aplikasi"
             >
               <Layers className="w-3.5 h-3.5" />
               <span className="hidden xs:inline">Pilihan Menu Aplikasi</span>
@@ -626,7 +640,10 @@ export default function App() {
               }}
               currentUser={currentUser}
               onOpenLogin={() => setIsLoginModalOpen(true)}
-              onOpenMenuModal={() => setIsMenuModalOpen(true)}
+              onOpenMenuModal={() => {
+                setActiveTab('menu_utama');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
             />
           </div>
         </div>
@@ -675,7 +692,8 @@ export default function App() {
                   }}
                   onOpenMenuModal={() => {
                     setIsSidebarOpen(false);
-                    setIsMenuModalOpen(true);
+                    setActiveTab('menu_utama');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 />
               </div>
@@ -850,7 +868,6 @@ export default function App() {
               currentUser={currentUser}
               isCompactBanner={false}
               onBackToMenu={() => setActiveTab('menu_utama')}
-              onOpenMenuModal={() => setIsMenuModalOpen(true)}
             />
           )}
 
@@ -892,17 +909,6 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Pilihan Menu Aplikasi Popup Modal */}
-      <PilihanMenuModal
-        isOpen={isMenuModalOpen}
-        onClose={() => setIsMenuModalOpen(false)}
-        onSelectTab={(tab: ActiveTab) => {
-          setActiveTab(tab);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }}
-        currentActiveTab={activeTab}
-      />
-
       {/* Login / Portal Selection Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
@@ -915,8 +921,7 @@ export default function App() {
             setActiveTab('menu_utama');
           }
           setIsLoginModalOpen(false);
-          // Langsung buka modal pilihan menu aplikasi setelah login
-          setIsMenuModalOpen(true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
       />
 

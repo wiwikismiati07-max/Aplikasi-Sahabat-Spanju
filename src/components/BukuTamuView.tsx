@@ -14,6 +14,7 @@ import { BukuTamuRecord } from '../types';
 import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { OfficialReportModal } from './OfficialReportModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface BukuTamuViewProps {
   tamuList: BukuTamuRecord[];
@@ -34,6 +35,8 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
   const [hariTanggal, setHariTanggal] = useState('Kamis, 24 September 2026');
@@ -320,9 +323,8 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Hapus catatan tamu atas nama ${item.namaTamu}?`)) {
-                          onDeleteTamu(item.id);
-                        }
+                        setDeletingId(item.id);
+                        setDeletingLabel(`catatan tamu atas nama ${item.namaTamu}`);
                       }}
                       className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 rounded-lg text-xs font-medium transition-colors"
                       title="Hapus Catatan"
@@ -416,6 +418,18 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
           </div>
         </OfficialReportModal>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeleteTamu(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

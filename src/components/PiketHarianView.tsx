@@ -19,6 +19,7 @@ import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { StudentPickerModal } from './StudentPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
 interface PiketHarianViewProps {
   piketList: PiketRecord[];
@@ -41,6 +42,8 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
   const [hariTanggal, setHariTanggal] = useState('Senin, 24 September 2026');
@@ -478,9 +481,8 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(`Hapus catatan piket tanggal ${item.hariTanggal}?`)) {
-                          onDeletePiket(item.id);
-                        }
+                        setDeletingId(item.id);
+                        setDeletingLabel(`catatan piket tanggal ${item.hariTanggal}`);
                       }}
                       className="p-1.5 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 rounded-lg text-xs font-medium transition-colors"
                       title="Hapus Catatan"
@@ -603,6 +605,18 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
           </div>
         </OfficialReportModal>
       )}
+
+      <ConfirmDeleteModal
+        isOpen={!!deletingId}
+        message={`Apakah Anda yakin ingin menghapus ${deletingLabel}?`}
+        onConfirm={() => {
+          if (deletingId) {
+            onDeletePiket(deletingId);
+            setDeletingId(null);
+          }
+        }}
+        onCancel={() => setDeletingId(null)}
+      />
     </div>
   );
 };

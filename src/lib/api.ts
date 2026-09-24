@@ -40,6 +40,93 @@ export const safeStorage = {
   },
 };
 
+// Column mapping dictionary from Supabase lowercase column names to frontend camelCase keys
+const LOWER_TO_CAMEL_MAP: Record<string, string> = {
+  haritanggal: 'hariTanggal',
+  namaanggota: 'namaAnggota',
+  hasiltemuan: 'hasilTemuan',
+  linkfoto: 'linkFoto',
+  tandatanganurl: 'tandaTanganUrl',
+  namapenandatangan: 'namaPenandatangan',
+  jabatanpenandatangan: 'jabatanPenandatangan',
+  createdat: 'createdAt',
+  hasiltemuansatuminggu: 'hasilTemuanSatuMinggu',
+  evaluasikegiatan: 'evaluasiKegiatan',
+  rencanainovasi: 'rencanaInovasi',
+  programkegiatan: 'programKegiatan',
+  targetpelaksanaan: 'targetPelaksanaan',
+  evaluasiprogramterlaksana: 'evaluasiProgramTerlaksana',
+  evaluasikendalasolusi: 'evaluasiKendalaSolusi',
+  hasilinovasi: 'hasilInovasi',
+  produkkreatif: 'produkKreatif',
+  rencanatindaklanjut: 'rencanaTindakLanjut',
+  pesandisampaikan: 'pesanDisampaikan',
+  kategoriliterasi: 'kategoriLiterasi',
+  kodelaporan: 'kodeLaporan',
+  waktukejadian: 'waktuKejadian',
+  namasiswa: 'namaSiswa',
+  namasiswa2: 'namaSiswa2',
+  kelas2: 'kelas2',
+  kronologikejadian: 'kronologiKejadian',
+  kegiatanpenyadaran: 'kegiatanPenyadaran',
+  kegiatanpencegahan: 'kegiatanPencegahan',
+  kegiatanpenangananrespon: 'kegiatanPenangananRespon',
+  kegiatanpelaporan: 'kegiatanPelaporan',
+  tindaklanjut: 'tindakLanjut',
+  kategorikasus: 'kategoriKasus',
+  tandatanganpetugasurl: 'tandaTanganPetugasUrl',
+  namapetugas: 'namaPetugas',
+  nomorsurat: 'nomorSurat',
+  tempatmediasi: 'tempatMediasi',
+  namapihak1: 'namaPihak1',
+  kelaspihak1: 'kelasPihak1',
+  nisnpihak1: 'nisnPihak1',
+  peranpihak1: 'peranPihak1',
+  tandatanganpihak1: 'tandaTanganPihak1',
+  ttdpihak1: 'ttdPihak1',
+  ispihak1locked: 'isPihak1Locked',
+  namapihak2: 'namaPihak2',
+  kelaspihak2: 'kelasPihak2',
+  nisnpihak2: 'nisnPihak2',
+  peranpihak2: 'peranPihak2',
+  tandatanganpihak2: 'tandaTanganPihak2',
+  ttdpihak2: 'ttdPihak2',
+  ispihak2locked: 'isPihak2Locked',
+  ringkasanmasalah: 'ringkasanMasalah',
+  butirkesepakatan: 'butirKesepakatan',
+  sanksiedukasi: 'sanksiEdukasi',
+  namasaksi: 'namaSaksi',
+  ttdsaksi: 'ttdSaksi',
+  namakepalasekolah: 'namaKepalaSekolah',
+  nipkepalasekolah: 'nipKepalaSekolah',
+  namakonselorsebaya: 'namaKonselorSebaya',
+  tandatangankonselorsebaya: 'tandaTanganKonselorSebaya',
+  hasilpemantauan: 'hasilPemantauan',
+  jamkedatangan: 'jamKedatangan',
+  namatamu: 'namaTamu',
+  namalengkap: 'namaLengkap',
+  nipnik: 'nipNik',
+  asalinstansi: 'asalInstansi',
+  instansiasal: 'instansiAsal',
+  maksudkunjungan: 'maksudKunjungan',
+  tujuankunjungan: 'tujuanKunjungan',
+  penerimatamu: 'penerimaTamu',
+  dokumentasimateriurl: 'dokumentasiMateriUrl',
+  pesanedukatif: 'pesanEdukatif',
+  thumbnailurl: 'thumbnailUrl',
+  jumlahsiswa: 'jumlahSiswa',
+  totalkasustahunini: 'totalKasusTahunIni',
+  kasusterselesaikan: 'kasusTerselesaikan',
+  skorkeramahan: 'skorKeramahan',
+  statuszona: 'statusZona',
+  walikelas: 'waliKelas',
+  dutaantibullying: 'dutaAntiBullying',
+  terakhirdiperiksa: 'terakhirDiperiksa',
+  jeniskelamin: 'jenisKelamin',
+  statuskepegawaian: 'statusKepegawaian',
+  saranperbaikan: 'saranPerbaikan',
+};
+
 // Generic fetch table helper with lowercase mapping
 export async function fetchTableData<T>(tableName: string, fallbackData: T[] = []): Promise<T[]> {
   try {
@@ -56,43 +143,16 @@ export async function fetchTableData<T>(tableName: string, fallbackData: T[] = [
       return fallbackData;
     }
 
-    // Map lowercase column names back to camelCase if needed
+    // Map lowercase column names back to camelCase
     const mapped = data.map((row: Record<string, unknown>) => {
       const obj: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(row)) {
-        if (k === 'haritanggal') obj.hariTanggal = v;
-        else if (k === 'namaanggota') obj.namaAnggota = v;
-        else if (k === 'hasiltemuan') obj.hasilTemuan = v;
-        else if (k === 'linkfoto') obj.linkFoto = v;
-        else if (k === 'tandatanganurl') obj.tandaTanganUrl = v;
-        else if (k === 'namapenandatangan') obj.namaPenandatangan = v;
-        else if (k === 'jabatanpenandatangan') obj.jabatanPenandatangan = v;
-        else if (k === 'createdat') obj.createdAt = v;
-        else if (k === 'namasiswa') obj.namaSiswa = v;
-        else if (k === 'namasiswa2') obj.namaSiswa2 = v;
-        else if (k === 'waktukejadian') obj.waktuKejadian = v;
-        else if (k === 'kodelaporan') obj.kodeLaporan = v;
-        else if (k === 'kronologikejadian') obj.kronologiKejadian = v;
-        else if (k === 'kegiatanpenyadaran') obj.kegiatanPenyadaran = v;
-        else if (k === 'kegiatanpencegahan') obj.kegiatanPencegahan = v;
-        else if (k === 'kegiatanpenangananrespon') obj.kegiatanPenangananRespon = v;
-        else if (k === 'kegiatanpelaporan') obj.kegiatanPelaporan = v;
-        else if (k === 'tindaklanjut') obj.tindakLanjut = v;
-        else if (k === 'kategorikasus') obj.kategoriKasus = v;
-        else if (k === 'namapetugas') obj.namaPetugas = v;
-        else if (k === 'tandatanganpetugasurl') obj.tandaTanganPetugasUrl = v;
-        else if (k === 'jamkedatangan') obj.jamKedatangan = v;
-        else if (k === 'namalengkap') obj.namaLengkap = v;
-        else if (k === 'nipnik') obj.nipNik = v;
-        else if (k === 'instansiasal') obj.instansiAsal = v;
-        else if (k === 'tujuankunjungan') obj.tujuanKunjungan = v;
-        else if (k === 'dokumentasimateriurl') obj.dokumentasiMateriUrl = v;
-        else if (k === 'pesanedukatif') obj.pesanEdukatif = v;
-        else if (k === 'thumbnailurl') obj.thumbnailUrl = v;
-        else if (k === 'saranperbaikan') obj.saranPerbaikan = v;
-        else if (k === 'jeniskelamin') obj.jenisKelamin = v;
-        else if (k === 'statuskepegawaian') obj.statusKepegawaian = v;
-        else obj[k] = v;
+        const keyLower = k.toLowerCase();
+        if (LOWER_TO_CAMEL_MAP[keyLower]) {
+          obj[LOWER_TO_CAMEL_MAP[keyLower]] = v;
+        } else {
+          obj[k] = v;
+        }
       }
       return obj as T;
     });
@@ -113,7 +173,7 @@ export async function fetchTableData<T>(tableName: string, fallbackData: T[] = [
   }
 }
 
-// Generic upsert/save row helper
+// Generic upsert/save row helper to Supabase
 export async function saveTableRow(tableName: string, row: any): Promise<boolean> {
   try {
     const dbRow: Record<string, unknown> = {};
