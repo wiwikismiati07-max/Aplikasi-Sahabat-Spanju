@@ -24,6 +24,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { ActiveTab, SurveiKepuasanRecord, UserProfile } from '../types';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface PilihanMenuAppViewProps {
   onSelectTab: (tab: ActiveTab) => void;
@@ -257,7 +258,10 @@ export const PilihanMenuAppView: React.FC<PilihanMenuAppViewProps> = ({
           </div>
 
           {/* Action Buttons Right */}
-          <div className="flex items-center gap-3 flex-shrink-0 self-start lg:self-center">
+          <div className="flex flex-wrap items-center gap-2.5 flex-shrink-0 self-start lg:self-center">
+            {/* Install PWA Button */}
+            <PWAInstallButton variant="navbar" />
+
             {/* Button 1: Bagan & Tolak Ukur */}
             <button
               type="button"
@@ -280,6 +284,9 @@ export const PilihanMenuAppView: React.FC<PilihanMenuAppViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* SECTION: PWA INSTALL CARD BANNER */}
+      <PWAInstallButton variant="card" />
 
       {/* SECTION 2: FILTER PILLS & SEARCH BAR (MATCHES SCREENSHOT) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

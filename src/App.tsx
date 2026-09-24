@@ -65,6 +65,8 @@ import { InfografisSpanjuView } from './components/InfografisSpanjuView';
 import { TutorialHeyzineView } from './components/TutorialHeyzineView';
 import { HotlineView } from './components/HotlineView';
 import { SurveiKepuasanSection } from './components/SurveiKepuasanSection';
+import { PWAInstallButton } from './components/PWAInstallButton';
+import { OfflineIndicator } from './components/OfflineIndicator';
 
 export default function App() {
   // Current active navigation tab (Default to 'bagan_alur' for Bagan & Alur Penanganan)
@@ -473,9 +475,16 @@ export default function App() {
               onClick={() => setActiveTab('zona_hijau')}
               className="flex items-center gap-3 cursor-pointer group"
             >
-              {/* Official Seal / Logo */}
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white font-black text-sm shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
-                7
+              {/* Official Seal / Logo PASS TEMENAN */}
+              <div className="w-11 h-11 rounded-2xl bg-white p-0.5 border border-emerald-300 flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform flex-shrink-0 overflow-hidden">
+                <img
+                  src="/pwa-192x192.png"
+                  alt="Logo PASS TEMENAN"
+                  className="w-full h-full object-cover rounded-xl"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
               </div>
               <div className="hidden sm:block">
                 <div className="flex items-center gap-1.5">
@@ -489,7 +498,7 @@ export default function App() {
                   </span>
                   <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 flex-shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                    Dashboard Sahabat SPANJU
+                    PASS TEMENAN
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-500 font-medium">
@@ -499,8 +508,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right: Infografis Button, Tahun Ajaran, Zona Hijau, Pilihan Menu, User Capsule, Keluar */}
+          {/* Right: Install PWA, Infografis Button, Tahun Ajaran, Zona Hijau, Pilihan Menu, User Capsule, Keluar */}
           <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Install PWA Button (HP & Laptop) */}
+            <PWAInstallButton variant="navbar" />
+
             {/* Infografis SPANJU button */}
             <button
               type="button"
@@ -857,6 +869,9 @@ export default function App() {
           setIsLoginModalOpen(true);
         }}
       />
+
+      {/* Offline Connectivity Indicator */}
+      <OfflineIndicator />
     </div>
   );
 }

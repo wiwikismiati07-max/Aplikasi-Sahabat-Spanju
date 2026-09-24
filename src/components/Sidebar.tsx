@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { ActiveTab, UserProfile } from '../types';
 
+import { PWAInstallButton } from './PWAInstallButton';
+
 interface SidebarProps {
   activeTab: ActiveTab;
   onTabChange?: (tab: ActiveTab) => void;
@@ -338,6 +340,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
         </div>
+
+        {/* PWA Install Button for Handphone & Laptop */}
+        <PWAInstallButton variant="sidebar" />
 
         {/* Footer: Backup & Sync and Logout */}
         <div className="p-3 border-t border-slate-100 bg-slate-50/70 space-y-2 flex-shrink-0">
