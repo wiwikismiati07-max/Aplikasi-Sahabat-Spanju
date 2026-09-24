@@ -13,8 +13,10 @@ import {
   X,
   Lock,
   ArrowRight,
+  ArrowLeft,
   RotateCcw,
   Download,
+  Layers,
 } from 'lucide-react';
 import { SurveiKepuasanRecord, UserProfile } from '../types';
 
@@ -27,6 +29,7 @@ interface SurveiKepuasanSectionProps {
   isCompactBanner?: boolean;
   onOpenFullSurvey?: () => void;
   onBackToMenu?: () => void;
+  onOpenMenuModal?: () => void;
 }
 
 export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
@@ -38,6 +41,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
   isCompactBanner = false,
   onOpenFullSurvey,
   onBackToMenu,
+  onOpenMenuModal,
 }) => {
   const isAdmin = currentUser.role === 'admin' || currentUser.role === 'operator';
 
@@ -62,6 +66,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
 
   // Edit State (Admin only)
   const [editingItem, setEditingItem] = useState<SurveiKepuasanRecord | null>(null);
+  const [deletingItem, setDeletingItem] = useState<SurveiKepuasanRecord | null>(null);
 
   // Signer Modal for Word Export
   const [isSignerModalOpen, setIsSignerModalOpen] = useState(false);
@@ -281,9 +286,11 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
               <ClipboardCheck className="w-3.5 h-3.5" />
               Survey Kepuasan Pengguna
             </div>
-            <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase">
-              Layanan Penanganan Kekerasan &amp; Perundungan (Bullying)
-            </h2>
+            <div>
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 uppercase">
+                Layanan Penanganan Kekerasan &amp; Perundungan (Bullying)
+              </h2>
+            </div>
             <p className="text-xs text-slate-500 mt-0.5">
               Aplikasi Sahabat SPANJU &bull; UPT SMP Negeri 7 Pasuruan bersama PASS TEMENAN
             </p>
@@ -320,6 +327,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
 
       {/* Tab 1: Formulir Survey */}
       {activeTab === 'form' && (
+        <>
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 sm:p-8">
           <div className="mb-6 p-4 bg-emerald-50/60 border border-emerald-200 rounded-xl text-xs text-slate-700 leading-relaxed">
             <div className="font-bold text-emerald-900 mb-1 flex items-center gap-1.5">
@@ -462,11 +470,22 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
               />
             </div>
 
-            {/* Submit Button */}
-            <div className="pt-2 flex items-center justify-end">
+            {/* Action Buttons */}
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              {(onBackToMenu || onOpenMenuModal) ? (
+                <button
+                  type="button"
+                  onClick={onBackToMenu || onOpenMenuModal}
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-200"
+                >
+                  <ArrowLeft className="w-4 h-4 text-slate-600" />
+                  <span>Kembali ke Menu</span>
+                </button>
+              ) : <div />}
+
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 active:scale-[0.98] text-white font-bold text-xs sm:text-sm rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Send className="w-4 h-4" />
                 <span>Kirim Jawaban Survey</span>
@@ -474,6 +493,21 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
             </div>
           </form>
         </div>
+
+        {/* Tombol Kembali ke Menu di bawah kotak formulir survey */}
+        {(onBackToMenu || onOpenMenuModal) && (
+          <div className="flex items-center justify-center sm:justify-start pt-1">
+            <button
+              type="button"
+              onClick={onBackToMenu || onOpenMenuModal}
+              className="inline-flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-300 hover:border-slate-400 rounded-2xl text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4 text-emerald-600" />
+              <span>Kembali ke Menu</span>
+            </button>
+          </div>
+        )}
+        </>
       )}
 
       {/* Tab 2: Rekapitulasi & Daftar Responden */}
@@ -603,12 +637,8 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            if (confirm(`Hapus masukan dari ${item.namaLengkap}?`)) {
-                              if (onDeleteSurvei) onDeleteSurvei(item.id);
-                            }
-                          }}
-                          className="p-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 rounded-lg transition-colors"
+                          onClick={() => setDeletingItem(item)}
+                          className="p-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 rounded-lg transition-colors cursor-pointer"
                           title="Hapus Masukan"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -620,6 +650,20 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
               </div>
             )}
           </div>
+
+          {/* Tombol Kembali ke Menu di bawah Rekapitulasi */}
+          {(onBackToMenu || onOpenMenuModal) && (
+            <div className="flex items-center justify-center sm:justify-start pt-1">
+              <button
+                type="button"
+                onClick={onBackToMenu || onOpenMenuModal}
+                className="inline-flex items-center gap-2.5 px-6 py-3 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 border border-slate-300 hover:border-slate-400 rounded-2xl text-xs sm:text-sm font-bold shadow-xs hover:shadow-md transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4 text-emerald-600" />
+                <span>Kembali ke Menu</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -783,6 +827,56 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Unduh Word (.doc) Sekarang</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Responden */}
+      {deletingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 p-5 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Hapus Data Masukan?</h3>
+                <p className="text-[11px] text-slate-500">Tindakan ini tidak dapat dibatalkan.</p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed">
+              Apakah Anda yakin ingin menghapus data survey dari:
+              <div className="font-bold text-slate-900 mt-1">
+                {deletingItem.namaLengkap} ({deletingItem.status})
+              </div>
+              {deletingItem.saranPerbaikan && (
+                <div className="italic text-slate-500 mt-1 text-[11px] line-clamp-2">
+                  &ldquo;{deletingItem.saranPerbaikan}&rdquo;
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingItem(null)}
+                className="px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDeleteSurvei) onDeleteSurvei(deletingItem.id);
+                  setDeletingItem(null);
+                }}
+                className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Hapus Masukan</span>
               </button>
             </div>
           </div>

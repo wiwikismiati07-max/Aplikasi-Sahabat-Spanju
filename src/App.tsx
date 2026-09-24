@@ -67,6 +67,7 @@ import { HotlineView } from './components/HotlineView';
 import { SurveiKepuasanSection } from './components/SurveiKepuasanSection';
 import { PWAInstallButton } from './components/PWAInstallButton';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { PilihanMenuModal } from './components/PilihanMenuModal';
 
 export default function App() {
   // Current active navigation tab (Default to 'bagan_alur' for Bagan & Alur Penanganan)
@@ -76,6 +77,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isInfografisOpen, setIsInfografisOpen] = useState(false);
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
 
   // Current User Session (Default Admin: Wiwik Ismiati, S.Pd)
   const [currentUser, setCurrentUser] = useState<UserProfile>({
@@ -259,10 +261,13 @@ export default function App() {
     setPiketList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
+    const item = piketList.find((p) => p.id === id);
+    if (item) saveTableData('piket_harian', { ...item, ...data });
   };
 
   const handleDeletePiket = (id: string) => {
     setPiketList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('piket_harian', id);
   };
 
   const handleAddCeri = (data: Omit<CeriRecord, 'id' | 'createdAt'>) => {
@@ -279,10 +284,13 @@ export default function App() {
     setCeriList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
+    const item = ceriList.find((c) => c.id === id);
+    if (item) saveTableData('sabtu_beli_teh_ceri', { ...item, ...data });
   };
 
   const handleDeleteCeri = (id: string) => {
     setCeriList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('sabtu_beli_teh_ceri', id);
   };
 
   const handleAddKebun = (data: Omit<KebunRecord, 'id' | 'createdAt'>) => {
@@ -299,10 +307,13 @@ export default function App() {
     setKebunList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
+    const item = kebunList.find((k) => k.id === id);
+    if (item) saveTableData('kebun_luas_berseri', { ...item, ...data });
   };
 
   const handleDeleteKebun = (id: string) => {
     setKebunList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('kebun_luas_berseri', id);
   };
 
   const handleAddSerasi = (data: Omit<SerasiRecord, 'id' | 'createdAt'>) => {
@@ -319,10 +330,13 @@ export default function App() {
     setSerasiList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
+    const item = serasiList.find((s) => s.id === id);
+    if (item) saveTableData('senandung_serasi', { ...item, ...data });
   };
 
   const handleDeleteSerasi = (id: string) => {
     setSerasiList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('senandung_serasi', id);
   };
 
   const handleAddELapor = (data: Omit<ELaporRecord, 'id' | 'createdAt'>) => {
@@ -339,10 +353,13 @@ export default function App() {
     setELaporList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
+    const item = eLaporList.find((e) => e.id === id);
+    if (item) saveTableData('e_lapor', { ...item, ...data });
   };
 
   const handleDeleteELapor = (id: string) => {
     setELaporList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('e_lapor', id);
   };
 
   const handleAddSPDamai = (data: Omit<SPDamaiRecord, 'id' | 'createdAt'>) => {
@@ -359,10 +376,13 @@ export default function App() {
     setSPDamaiList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
+    const item = spDamaiList.find((s) => s.id === id);
+    if (item) saveTableData('sp_damai', { ...item, ...data });
   };
 
   const handleDeleteSPDamai = (id: string) => {
     setSPDamaiList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('sp_damai', id);
   };
 
   const handleAddTamu = (data: Omit<BukuTamuRecord, 'id' | 'createdAt'>) => {
@@ -379,10 +399,13 @@ export default function App() {
     setTamuList((prev) =>
       prev.map((item) => (item.id === id ? { ...item, ...data } : item))
     );
+    const item = tamuList.find((t) => t.id === id);
+    if (item) saveTableData('buku_tamu', { ...item, ...data });
   };
 
   const handleDeleteTamu = (id: string) => {
     setTamuList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('buku_tamu', id);
   };
 
   const handleAddSiswa = (siswa: SiswaMaster) => {
@@ -443,6 +466,7 @@ export default function App() {
 
   const handleDeleteMedia = (id: string) => {
     setMediaList((prev) => prev.filter((m) => m.id !== id));
+    deleteTableData('media_edukasi', id);
   };
 
   const handleAddSurvei = (data: Omit<SurveiKepuasanRecord, 'id' | 'createdAt'>) => {
@@ -453,6 +477,19 @@ export default function App() {
     };
     setSurveiList((prev) => [newItem, ...prev]);
     saveTableData('survei_kepuasan', newItem);
+  };
+
+  const handleUpdateSurvei = (id: string, data: Partial<SurveiKepuasanRecord>) => {
+    setSurveiList((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, ...data } : item))
+    );
+    const item = surveiList.find((s) => s.id === id);
+    if (item) saveTableData('survei_kepuasan', { ...item, ...data });
+  };
+
+  const handleDeleteSurvei = (id: string) => {
+    setSurveiList((prev) => prev.filter((item) => item.id !== id));
+    deleteTableData('survei_kepuasan', id);
   };
 
   return (
@@ -538,8 +575,9 @@ export default function App() {
             {/* Pilihan Menu Aplikasi button (Solid Blue) */}
             <button
               type="button"
-              onClick={() => setActiveTab('menu_utama')}
+              onClick={() => setIsMenuModalOpen(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
+              title="Buka Popup Pilihan Menu Aplikasi"
             >
               <Layers className="w-3.5 h-3.5" />
               <span className="hidden xs:inline">Pilihan Menu Aplikasi</span>
@@ -588,6 +626,7 @@ export default function App() {
               }}
               currentUser={currentUser}
               onOpenLogin={() => setIsLoginModalOpen(true)}
+              onOpenMenuModal={() => setIsMenuModalOpen(true)}
             />
           </div>
         </div>
@@ -633,6 +672,10 @@ export default function App() {
                   onOpenLogin={() => {
                     setIsSidebarOpen(false);
                     setIsLoginModalOpen(true);
+                  }}
+                  onOpenMenuModal={() => {
+                    setIsSidebarOpen(false);
+                    setIsMenuModalOpen(true);
                   }}
                 />
               </div>
@@ -802,8 +845,12 @@ export default function App() {
             <SurveiKepuasanSection
               surveiList={surveiList}
               onSubmitSurvei={handleAddSurvei}
+              onUpdateSurvei={handleUpdateSurvei}
+              onDeleteSurvei={handleDeleteSurvei}
               currentUser={currentUser}
               isCompactBanner={false}
+              onBackToMenu={() => setActiveTab('menu_utama')}
+              onOpenMenuModal={() => setIsMenuModalOpen(true)}
             />
           )}
 
@@ -845,6 +892,17 @@ export default function App() {
         </div>
       </footer>
 
+      {/* Pilihan Menu Aplikasi Popup Modal */}
+      <PilihanMenuModal
+        isOpen={isMenuModalOpen}
+        onClose={() => setIsMenuModalOpen(false)}
+        onSelectTab={(tab: ActiveTab) => {
+          setActiveTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        currentActiveTab={activeTab}
+      />
+
       {/* Login / Portal Selection Modal */}
       <LoginModal
         isOpen={isLoginModalOpen}
@@ -857,6 +915,8 @@ export default function App() {
             setActiveTab('menu_utama');
           }
           setIsLoginModalOpen(false);
+          // Langsung buka modal pilihan menu aplikasi setelah login
+          setIsMenuModalOpen(true);
         }}
       />
 

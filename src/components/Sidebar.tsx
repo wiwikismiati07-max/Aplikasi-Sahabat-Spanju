@@ -36,6 +36,7 @@ interface SidebarProps {
   currentUser: UserProfile;
   onLogout?: () => void;
   onOpenLogin?: () => void;
+  onOpenMenuModal?: () => void;
   onExportBackup?: () => void;
   onImportBackup?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isOpenMobile?: boolean;
@@ -49,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentUser,
   onLogout,
   onOpenLogin,
+  onOpenMenuModal,
   onExportBackup,
   onImportBackup,
   isOpenMobile = false,
@@ -266,13 +268,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Section Header: MENU SAHABAT SPANJU + 18 Modul badge */}
         <div className="px-4 pt-3 pb-1 flex items-center justify-between text-xs flex-shrink-0">
-          <div className="flex items-center gap-1.5 font-bold text-emerald-800 text-[11px] uppercase tracking-wider">
+          <div
+            onClick={onOpenMenuModal}
+            className={`flex items-center gap-1.5 font-bold text-emerald-800 text-[11px] uppercase tracking-wider ${
+              onOpenMenuModal ? 'cursor-pointer hover:text-emerald-950' : ''
+            }`}
+            title="Klik untuk membuka Popup Pilihan Menu"
+          >
             <Layers className="w-3.5 h-3.5 text-emerald-600" />
             <span>MENU SAHABAT SPANJU</span>
           </div>
-          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-            18 Modul
-          </span>
+          {onOpenMenuModal ? (
+            <button
+              type="button"
+              onClick={onOpenMenuModal}
+              className="text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-md cursor-pointer transition-colors"
+              title="Buka Popup Pilihan Menu"
+            >
+              18 Modul &bull; Popup
+            </button>
+          ) : (
+            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+              18 Modul
+            </span>
+          )}
         </div>
 
         {/* Scrollable Navigation Menu List */}
