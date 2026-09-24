@@ -142,14 +142,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'E-Lapor Perundungan',
       subtitle: 'Pengaduan & Investigasi Kasus',
       icon: AlertTriangle,
-      badge: 'KONFIDENSIAL',
-      badgeColor: 'bg-emerald-50 text-emerald-800 border-emerald-300',
+      badge: currentUser.role === 'admin' || currentUser.role === 'operator' ? 'KONFIDENSIAL' : 'TERKUNCI',
+      badgeColor:
+        currentUser.role === 'admin' || currentUser.role === 'operator'
+          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+          : 'bg-rose-50 text-rose-700 border-rose-200',
     },
     {
       id: 'sp_damai' as ActiveTab,
       label: 'SP Damai Siswa',
       subtitle: 'Surat Perjanjian Mediasi & Tuntas',
       icon: Handshake,
+      badge: currentUser.role === 'admin' || currentUser.role === 'operator' ? 'Restorative' : 'TERKUNCI',
+      badgeColor:
+        currentUser.role === 'admin' || currentUser.role === 'operator'
+          ? 'bg-cyan-50 text-cyan-800 border-cyan-200'
+          : 'bg-rose-50 text-rose-700 border-rose-200',
     },
     {
       id: 'buku_tamu' as ActiveTab,

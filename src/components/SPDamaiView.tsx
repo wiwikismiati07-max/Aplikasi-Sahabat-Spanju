@@ -9,8 +9,12 @@ import {
   Sparkles,
   X,
   CheckCircle2,
+  Lock,
+  ShieldAlert,
+  UserCheck,
+  KeyRound,
 } from 'lucide-react';
-import { SPDamaiRecord, SiswaMaster } from '../types';
+import { SPDamaiRecord, SiswaMaster, UserProfile } from '../types';
 import { CalendarDatePicker } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { StudentPickerModal } from './StudentPickerModal';
@@ -23,7 +27,9 @@ interface SPDamaiViewProps {
   onUpdateSPDamai: (id: string, data: Partial<SPDamaiRecord>) => void;
   onDeleteSPDamai: (id: string) => void;
   siswaList: SiswaMaster[];
+  currentUser: UserProfile;
   onOpenMenu: () => void;
+  onOpenLogin?: () => void;
   isAdmin: boolean;
 }
 
@@ -33,9 +39,127 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
   onUpdateSPDamai,
   onDeleteSPDamai,
   siswaList,
+  currentUser,
   onOpenMenu,
+  onOpenLogin,
   isAdmin,
 }) => {
+  const isAdminOrOperator = currentUser.role === 'admin' || currentUser.role === 'operator';
+
+  if (!isAdminOrOperator) {
+    return (
+      <div className="w-full space-y-6 animate-in fade-in duration-200">
+        {/* Banner Locked */}
+        <div className="bg-gradient-to-r from-rose-800 via-rose-700 to-amber-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border border-rose-600/30">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-xs flex items-center justify-center flex-shrink-0 shadow-inner">
+              <Lock className="w-9 h-9 text-rose-200 animate-pulse" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/30 border border-rose-300/30 text-rose-100 text-xs font-bold uppercase tracking-wider mb-2">
+                <ShieldAlert className="w-3.5 h-3.5 text-rose-300" />
+                <span>Menu Dikunci Khusus Operator &amp; Admin</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight uppercase">
+                Aplikasi Surat Kesepakatan Damai (SP Damai)
+              </h1>
+              <p className="text-xs sm:text-sm text-rose-100 max-w-2xl mt-1">
+                Akses terbatas untuk perlindungan privasi data mediasi siswa, berkas perjanjian, dan kerahasiaan proses restorative justice UPT SMP Negeri 7 Pasuruan.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onOpenMenu}
+            className="flex items-center gap-2 px-5 py-3 bg-white hover:bg-rose-50 active:bg-rose-100 text-rose-900 rounded-2xl text-xs font-bold shadow-lg transition-all cursor-pointer flex-shrink-0"
+          >
+            <Layers className="w-4 h-4 text-rose-700" />
+            <span>Kembali ke Pilihan Menu</span>
+          </button>
+        </div>
+
+        {/* Lock Explanation Card */}
+        <div className="bg-white rounded-3xl border border-rose-200 p-6 sm:p-8 shadow-sm space-y-6 text-slate-800">
+          <div className="flex items-start gap-4 p-5 rounded-2xl bg-rose-50/80 border border-rose-200">
+            <div className="p-3 bg-rose-100 rounded-2xl text-rose-700 flex-shrink-0">
+              <Lock className="w-7 h-7" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className="text-sm sm:text-base font-black text-rose-900 uppercase tracking-tight">
+                Akses Terkunci Untuk Peran: <span className="underline decoration-rose-400">{currentUser.role.toUpperCase()}</span> ({currentUser.nama || 'Pengguna'})
+              </h3>
+              <p className="text-xs sm:text-sm leading-relaxed text-slate-700 font-medium">
+                Sesuai regulasi kerahasiaan informasi TPPK (Tim Pencegahan dan Penanganan Kekerasan), modul penerbitan dan arsip <strong>Surat Kesepakatan Damai (SP Damai Siswa)</strong> khusus dikelola oleh <strong>Administrator Sekolah &amp; Operator TPPK</strong>. Pengguna yang masuk sebagai <strong>Siswa, Guru, maupun Orang Tua</strong> tidak diizinkan membuka berkas mediasi dan isi kesepakatan ini demi menjaga kerahasiaan para pihak.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <UserCheck className="w-4 h-4 text-emerald-600" />
+                Pengelolaan Khusus Operator / Admin
+              </h4>
+              <ul className="text-xs text-slate-600 space-y-2 list-disc list-inside font-medium leading-relaxed">
+                <li>
+                  <strong className="text-slate-900">Petugas Konselor / BK:</strong> Memfasilitasi mediasi restorative justice antar pihak berselisih.
+                </li>
+                <li>
+                  <strong className="text-slate-900">Tim TPPK &amp; Kepsek:</strong> Mengesahkan butir kesepakatan damai dan sanksi edukatif.
+                </li>
+              </ul>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                Layanan Publik Lain Yang Bebas Diakses
+              </h4>
+              <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                Untuk keperluan umum dan komunikasi ramah anak, Anda dapat membuka:
+              </p>
+              <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside font-medium">
+                <li><strong>Senandung Serasi:</strong> Salam ramah &amp; literasi karakter.</li>
+                <li><strong>Hotline Siaga 24 Jam:</strong> Layanan aduan &amp; konseling.</li>
+                <li><strong>Survey Kepuasan Layanan:</strong> Evaluasi &amp; masukan publik.</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Role Status & Actions */}
+          <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-xs text-slate-600 font-medium flex items-center gap-2">
+              <span>Status Login Aktif:</span>
+              <span className="font-bold text-rose-800 uppercase px-3 py-1 bg-rose-100 border border-rose-200 rounded-lg text-[11px]">
+                {currentUser.role} &bull; {currentUser.nama || 'Pengguna'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {onOpenLogin && (
+                <button
+                  type="button"
+                  onClick={onOpenLogin}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md shadow-emerald-700/20"
+                >
+                  <KeyRound className="w-4 h-4 text-emerald-200" />
+                  <span>Login Sebagai Admin / Operator</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onOpenMenu}
+                className="flex-1 sm:flex-none px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer text-center"
+              >
+                Ke Menu Utama
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);

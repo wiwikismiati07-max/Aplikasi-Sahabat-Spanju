@@ -839,6 +839,7 @@ export default function App() {
               siswaList={siswaList}
               currentUser={currentUser}
               onOpenMenu={() => setActiveTab('menu_utama')}
+              onOpenLogin={() => setIsLoginModalOpen(true)}
             />
           )}
 
@@ -849,7 +850,9 @@ export default function App() {
               onUpdateSPDamai={handleUpdateSPDamai}
               onDeleteSPDamai={handleDeleteSPDamai}
               siswaList={siswaList}
+              currentUser={currentUser}
               onOpenMenu={() => setActiveTab('menu_utama')}
+              onOpenLogin={() => setIsLoginModalOpen(true)}
               isAdmin={isAdmin}
             />
           )}
