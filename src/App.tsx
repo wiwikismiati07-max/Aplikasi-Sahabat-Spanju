@@ -203,40 +203,88 @@ export default function App() {
     async function loadCloudData() {
       try {
         const cloudKelas = await fetchTableData<KelasZona>('kelas_zona');
-        if (cloudKelas && cloudKelas.length > 0) setKelasList(cloudKelas);
+        if (cloudKelas && cloudKelas.length > 0) {
+          setKelasList(cloudKelas);
+        } else if (kelasList.length > 0) {
+          bulkReplaceTableData('kelas_zona', kelasList);
+        }
 
         const cloudPiket = await fetchTableData<PiketRecord>('piket_harian');
-        if (cloudPiket && cloudPiket.length > 0) setPiketList(cloudPiket);
+        if (cloudPiket && cloudPiket.length > 0) {
+          setPiketList(cloudPiket);
+        } else if (piketList.length > 0) {
+          bulkReplaceTableData('piket_harian', piketList);
+        }
 
         const cloudCeri = await fetchTableData<CeriRecord>('sabtu_beli_teh_ceri');
-        if (cloudCeri && cloudCeri.length > 0) setCeriList(cloudCeri);
+        if (cloudCeri && cloudCeri.length > 0) {
+          setCeriList(cloudCeri);
+        } else if (ceriList.length > 0) {
+          bulkReplaceTableData('sabtu_beli_teh_ceri', ceriList);
+        }
 
         const cloudKebun = await fetchTableData<KebunRecord>('kebun_luas_berseri');
-        if (cloudKebun && cloudKebun.length > 0) setKebunList(cloudKebun);
+        if (cloudKebun && cloudKebun.length > 0) {
+          setKebunList(cloudKebun);
+        } else if (kebunList.length > 0) {
+          bulkReplaceTableData('kebun_luas_berseri', kebunList);
+        }
 
         const cloudSerasi = await fetchTableData<SerasiRecord>('senandung_serasi');
-        if (cloudSerasi && cloudSerasi.length > 0) setSerasiList(cloudSerasi);
+        if (cloudSerasi && cloudSerasi.length > 0) {
+          setSerasiList(cloudSerasi);
+        } else if (serasiList.length > 0) {
+          bulkReplaceTableData('senandung_serasi', serasiList);
+        }
 
         const cloudELapor = await fetchTableData<ELaporRecord>('e_lapor');
-        if (cloudELapor && cloudELapor.length > 0) setELaporList(cloudELapor);
+        if (cloudELapor && cloudELapor.length > 0) {
+          setELaporList(cloudELapor);
+        } else if (eLaporList.length > 0) {
+          bulkReplaceTableData('e_lapor', eLaporList);
+        }
 
         const cloudSPDamai = await fetchTableData<SPDamaiRecord>('sp_damai');
-        if (cloudSPDamai && cloudSPDamai.length > 0) setSPDamaiList(cloudSPDamai);
+        if (cloudSPDamai && cloudSPDamai.length > 0) {
+          setSPDamaiList(cloudSPDamai);
+        } else if (spDamaiList.length > 0) {
+          bulkReplaceTableData('sp_damai', spDamaiList);
+        }
 
         const cloudTamu = await fetchTableData<BukuTamuRecord>('buku_tamu');
-        if (cloudTamu && cloudTamu.length > 0) setTamuList(cloudTamu);
+        if (cloudTamu && cloudTamu.length > 0) {
+          setTamuList(cloudTamu);
+        } else if (tamuList.length > 0) {
+          bulkReplaceTableData('buku_tamu', tamuList);
+        }
 
         const cloudSiswa = await fetchTableData<SiswaMaster>('master_siswa');
-        if (cloudSiswa && cloudSiswa.length > 0) setSiswaList(cloudSiswa);
+        if (cloudSiswa && cloudSiswa.length > 0) {
+          setSiswaList(cloudSiswa);
+        } else if (siswaList.length > 0) {
+          bulkReplaceTableData('master_siswa', siswaList);
+        }
 
         const cloudGuru = await fetchTableData<GuruMaster>('master_guru');
-        if (cloudGuru && cloudGuru.length > 0) setGuruList(cloudGuru);
+        if (cloudGuru && cloudGuru.length > 0) {
+          setGuruList(cloudGuru);
+        } else if (guruList.length > 0) {
+          bulkReplaceTableData('master_guru', guruList);
+        }
 
         const cloudMedia = await fetchTableData<MediaEdukasiItem>('media_edukasi');
-        if (cloudMedia && cloudMedia.length > 0) setMediaList(cloudMedia);
+        if (cloudMedia && cloudMedia.length > 0) {
+          setMediaList(cloudMedia);
+        } else if (mediaList.length > 0) {
+          bulkReplaceTableData('media_edukasi', mediaList);
+        }
 
         const cloudSurvei = await fetchTableData<SurveiKepuasanRecord>('survei_kepuasan');
-        if (cloudSurvei && cloudSurvei.length > 0) setSurveiList(cloudSurvei);
+        if (cloudSurvei && cloudSurvei.length > 0) {
+          setSurveiList(cloudSurvei);
+        } else if (surveiList.length > 0) {
+          bulkReplaceTableData('survei_kepuasan', surveiList);
+        }
       } catch {
         // Fallback to local storage
       }

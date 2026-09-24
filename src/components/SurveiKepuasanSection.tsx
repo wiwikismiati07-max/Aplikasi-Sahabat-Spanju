@@ -17,8 +17,12 @@ import {
   RotateCcw,
   Download,
   Layers,
+  Database,
+  UploadCloud,
+  CheckCircle2,
 } from 'lucide-react';
 import { SurveiKepuasanRecord, UserProfile } from '../types';
+import { bulkReplaceTableData } from '../lib/api';
 
 interface SurveiKepuasanSectionProps {
   surveiList: SurveiKepuasanRecord[];
@@ -569,16 +573,30 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
 
           {/* Daftar Masukan & Saran Responden */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
                 <Users className="w-4 h-4 text-emerald-600" />
                 Daftar Masukan &amp; Saran Responden ({surveiList.length})
               </div>
-              {!isAdmin && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                  <Lock className="w-3 h-3" /> Hapus / Edit Khusus Admin
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    bulkReplaceTableData('survei_kepuasan', surveiList);
+                    alert('Data survei berhasil disinkronkan dan diunggah ke Supabase!');
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-300 transition-colors cursor-pointer shadow-2xs"
+                  title="Tekan untuk memaksa sinkronisasi data saran ke Supabase"
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Sinkronkan ke Supabase</span>
+                </button>
+                {!isAdmin && (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                    <Lock className="w-3 h-3" /> Hapus / Edit Khusus Admin
+                  </span>
+                )}
+              </div>
             </div>
 
             {surveiList.length === 0 ? (
