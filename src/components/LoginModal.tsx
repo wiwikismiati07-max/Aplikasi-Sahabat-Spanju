@@ -241,7 +241,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
         {/* Footer Note */}
         <div className="p-3 bg-slate-50 border-t border-slate-200 text-center text-[11px] text-slate-500 flex-shrink-0">
-          Akun Umum: <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">passtemenan / smpn7</code> &bull; Admin: <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">admin / admin123</code>
+          Akun Umum: <code className="bg-slate-200 px-1 py-0.5 rounded text-slate-800">passtemenan / smpn7</code>
         </div>
       </div>
     </div>
