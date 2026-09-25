@@ -179,7 +179,7 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
   const [kegiatanPelaporan, setKegiatanPelaporan] = useState('');
   const [tindakLanjut, setTindakLanjut] = useState('');
   const [keterangan, setKeterangan] = useState('');
-  const [status, setStatus] = useState<ELaporRecord['status']>('Investigasi');
+  const [status, setStatus] = useState<ELaporRecord['status']>('Selesai');
   const [kategoriKasus, setKategoriKasus] = useState<ELaporRecord['kategoriKasus']>('Verbal');
   const [tandaTanganUrl, setTandaTanganUrl] = useState('');
 
@@ -204,7 +204,7 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
     setKegiatanPelaporan('');
     setTindakLanjut('');
     setKeterangan('');
-    setStatus('Investigasi');
+    setStatus('Selesai');
     setKategoriKasus('Verbal');
     setTandaTanganUrl('');
     setIsFormOpen(false);
@@ -387,19 +387,27 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Status Penanganan Kasus
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Status Penanganan Kasus
+                    </label>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                      <Lock className="w-2.5 h-2.5 text-emerald-600" /> Terkunci Permanen
+                    </span>
+                  </div>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value as ELaporRecord['status'])}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 text-slate-800 font-semibold"
                   >
-                    <option value="Investigasi">Investigasi (Penyelidikan Fakta)</option>
-                    <option value="Mediasi">Mediasi (Proses Rekonsiliasi)</option>
                     <option value="Selesai">Selesai (Kasus Tuntas Saling Memaafkan)</option>
                     <option value="Terpantau Aman">Terpantau Aman (Zero Conflict)</option>
+                    <option value="Mediasi">Mediasi (Proses Rekonsiliasi)</option>
+                    <option value="Investigasi">Investigasi (Penyelidikan Fakta)</option>
                   </select>
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Status tersimpan permanen dan tidak akan berubah otomatis.
+                  </span>
                 </div>
               </div>
 
