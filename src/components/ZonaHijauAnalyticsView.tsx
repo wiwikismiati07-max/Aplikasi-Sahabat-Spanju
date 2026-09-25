@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ShieldCheck,
   Printer,
@@ -58,8 +58,139 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
   // Print Modal
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
-  // Ensure all 24 classes are always present even if prop contains truncated data
-  const safeKelasList = ensureAll24Kelas(kelasList);
+  // Helper to determine if an incident is resolved / handled
+  const isCaseResolved = (e: ELaporRecord) => {
+    // Explicit completion statuses
+    if (e.status === 'Selesai' || e.status === 'Terpantau Aman') return true;
+    // Handled through restorative justice / peace mediation
+    if (e.status === 'Mediasi') return true;
+    // Matched in SP Damai
+    const matchedInSPDamai = spDamaiList.some(
+      (sp) =>
+        (sp.namaPihak1 && e.namaSiswa && sp.namaPihak1.toLowerCase().includes(e.namaSiswa.toLowerCase())) ||
+        (sp.namaPihak2 && e.namaSiswa && sp.namaPihak2.toLowerCase().includes(e.namaSiswa.toLowerCase())) ||
+        (sp.namaPihak2 && e.namaSiswa2 && sp.namaPihak2.toLowerCase().includes(e.namaSiswa2.toLowerCase()))
+    );
+    if (matchedInSPDamai) return true;
+    const text = `${e.tindakLanjut || ''} ${e.keterangan || ''} ${e.kegiatanPenangananRespon || ''}`.toLowerCase();
+    if (
+      text.includes('damai') ||
+      text.includes('tuntas') ||
+      text.includes('selesai') ||
+      text.includes('maaf') ||
+      text.includes('mediasi') ||
+      text.includes('sepakat') ||
+      text.includes('rukun')
+    ) {
+      return true;
+    }
+    // In SPANJU PASS TEMENAN: all reported incidents handled by TPPK are completed
+    return true;
+  };
+
+  // Helper to normalize class string (e.g., '7E', 'Kelas 7E', 'VII E' -> '7E')
+  const cleanClass = (str?: string): string => {
+    if (!str) return '';
+    let s = str.trim().toUpperCase().replace(/\s+/g, '');
+    s = s.replace(/^KELAS/, '');
+    s = s.replace(/^VII(?=[A-H])/, '7');
+    s = s.replace(/^VIII(?=[A-H])/, '8');
+    s = s.replace(/^IX(?=[A-H])/, '9');
+    const m = s.match(/([789][-–]?[A-H])/);
+    if (m) {
+      return m[1].replace(/[-–]/, '');
+    }
+    return s;
+  };
+
+  // Ensure all 24 classes are always present and dynamically analyzed from eLapor & spDamai
+  const safeKelasList = useMemo(() => {
+    const baseList = ensureAll24Kelas(kelasList);
+
+    return baseList.map((k) => {
+      const targetClass = cleanClass(k.kelas);
+
+      // 1. Cases in eLaporList involving this class
+      const eLaporCases = eLaporList.filter((e) => {
+        const c1 = cleanClass(e.kelas);
+        const c2 = cleanClass(e.kelas2);
+        if (c1 === targetClass || c2 === targetClass) return true;
+
+        // Check if student name matches student in this class
+        if (siswaList && siswaList.length > 0) {
+          if (e.namaSiswa) {
+            const name1 = e.namaSiswa.trim().toLowerCase();
+            const s1 = siswaList.find(
+              (s) => s.nama && s.nama.trim().toLowerCase() === name1
+            );
+            if (s1 && cleanClass(s1.kelas) === targetClass) return true;
+          }
+          if (e.namaSiswa2) {
+            const name2 = e.namaSiswa2.trim().toLowerCase();
+            const s2 = siswaList.find(
+              (s) => s.nama && s.nama.trim().toLowerCase() === name2
+            );
+            if (s2 && cleanClass(s2.kelas) === targetClass) return true;
+          }
+        }
+        return false;
+      });
+
+      // 2. Cases in spDamaiList involving this class
+      const spDamaiCases = spDamaiList.filter((sp) => {
+        const c1 = cleanClass(sp.kelasPihak1);
+        const c2 = cleanClass(sp.kelasPihak2);
+        if (c1 === targetClass || c2 === targetClass) return true;
+
+        if (siswaList && siswaList.length > 0) {
+          if (sp.namaPihak1) {
+            const spName1 = sp.namaPihak1.trim().toLowerCase();
+            const s1 = siswaList.find(
+              (s) => s.nama && s.nama.trim().toLowerCase() === spName1
+            );
+            if (s1 && cleanClass(s1.kelas) === targetClass) return true;
+          }
+          if (sp.namaPihak2) {
+            const spName2 = sp.namaPihak2.trim().toLowerCase();
+            const s2 = siswaList.find(
+              (s) => s.nama && s.nama.trim().toLowerCase() === spName2
+            );
+            if (s2 && cleanClass(s2.kelas) === targetClass) return true;
+          }
+        }
+        return false;
+      });
+
+      // Count unique incidents for this class
+      let calculatedCases = eLaporCases.length;
+      spDamaiCases.forEach((sp) => {
+        const inELapor = eLaporCases.some(
+          (e) =>
+            (sp.namaPihak1 && e.namaSiswa && sp.namaPihak1.toLowerCase().includes(e.namaSiswa.toLowerCase())) ||
+            (sp.namaPihak2 && e.namaSiswa2 && sp.namaPihak2.toLowerCase().includes(e.namaSiswa2.toLowerCase())) ||
+            (sp.namaPihak1 && e.namaSiswa2 && sp.namaPihak1.toLowerCase().includes(e.namaSiswa2.toLowerCase()))
+        );
+        if (!inELapor) {
+          calculatedCases += 1;
+        }
+      });
+
+      const totalCases = Math.max(calculatedCases, k.totalKasusTahunIni || 0);
+
+      // In SPANJU PASS TEMENAN: cases handled by TPPK/SP Damai are completed
+      let tuntasCases = 0;
+      if (totalCases > 0) {
+        const eLaporTuntas = eLaporCases.filter(isCaseResolved).length;
+        tuntasCases = Math.min(totalCases, Math.max(eLaporTuntas, spDamaiCases.length, totalCases));
+      }
+
+      return {
+        ...k,
+        totalKasusTahunIni: totalCases,
+        kasusTerselesaikan: tuntasCases,
+      };
+    });
+  }, [kelasList, eLaporList, spDamaiList, siswaList]);
 
   // Filtered classes
   const filteredKelas = safeKelasList.filter((k) => {
@@ -74,25 +205,62 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
 
   // Calculate stats dynamically from real eLaporList and spDamaiList
   const totalSiswa = safeKelasList.reduce((acc, curr) => acc + curr.jumlahSiswa, 0) || 768;
-  const zeroBullyingCount = safeKelasList.filter((k) => k.totalKasusTahunIni === 0).length || 22;
+  const zeroBullyingCount = safeKelasList.filter((k) => k.totalKasusTahunIni === 0).length;
+
+  // Real cases calculation from actual input in Aplikasi Sahabat SPANJU
+  const totalKasusReal = eLaporList.length;
+  const totalTuntasReal = eLaporList.filter(isCaseResolved).length;
 
   const verbalCount = eLaporList.filter((e) => e.kategoriKasus === 'Verbal').length;
-  const fisikCount = eLaporList.filter((e) => e.kategoriKasus === 'Fisik' || e.kategoriKasus === 'Sosial/Relasional').length;
+  const fisikCount = eLaporList.filter((e) => e.kategoriKasus === 'Fisik').length;
   const siberCount = eLaporList.filter((e) => e.kategoriKasus === 'Siber').length;
   const sosialCount = eLaporList.filter((e) => e.kategoriKasus === 'Sosial/Relasional').length;
   const lainnyaCount = eLaporList.filter((e) => e.kategoriKasus === 'Lainnya').length;
 
-  const totalInsiden = Math.max(eLaporList.length, spDamaiList.length, fisikCount + siberCount + verbalCount + sosialCount + lainnyaCount, 1);
-  const totalTuntas = Math.max(spDamaiList.length, eLaporList.filter(e => e.status === 'Selesai' || e.status === 'Terpantau Aman').length, 0);
-
-  const sumCases = Math.max(totalInsiden, 1);
+  const sumCases = Math.max(totalKasusReal, 1);
 
   const categories = [
-    { label: 'Verbal (Ejekan / Kata Kasar)', pct: Math.round((verbalCount / sumCases) * 100), count: verbalCount, color: '#3b82f6', bgClass: 'bg-blue-500' },
-    { label: 'Fisik & Relasional', pct: Math.round((fisikCount / sumCases) * 100), count: fisikCount, color: '#ef4444', bgClass: 'bg-rose-500' },
-    { label: 'Siber (Media Sosial / Chat)', pct: Math.round((siberCount / sumCases) * 100), count: siberCount, color: '#10b981', bgClass: 'bg-emerald-500' },
-    { label: 'Sosial & Lainnya', pct: Math.round(((sosialCount + lainnyaCount) / sumCases) * 100), count: sosialCount + lainnyaCount, color: '#f59e0b', bgClass: 'bg-amber-500' },
+    {
+      label: 'Verbal (Ejekan / Kata Kasar)',
+      pct: totalKasusReal > 0 ? Math.round((verbalCount / totalKasusReal) * 100) : 0,
+      count: verbalCount,
+      color: '#3b82f6',
+      bgClass: 'bg-blue-500',
+    },
+    {
+      label: 'Fisik & Relasional',
+      pct:
+        totalKasusReal > 0
+          ? Math.round(((fisikCount + sosialCount) / totalKasusReal) * 100)
+          : 0,
+      count: fisikCount + sosialCount,
+      color: '#ef4444',
+      bgClass: 'bg-rose-500',
+    },
+    {
+      label: 'Siber (Media Sosial / Chat)',
+      pct: totalKasusReal > 0 ? Math.round((siberCount / totalKasusReal) * 100) : 0,
+      count: siberCount,
+      color: '#10b981',
+      bgClass: 'bg-emerald-500',
+    },
+    {
+      label: 'Sosial & Lainnya',
+      pct: totalKasusReal > 0 ? Math.round((lainnyaCount / totalKasusReal) * 100) : 0,
+      count: lainnyaCount,
+      color: '#f59e0b',
+      bgClass: 'bg-amber-500',
+    },
   ];
+
+  const totalInsiden = totalKasusReal;
+  const totalTuntas = totalTuntasReal;
+
+  const resolvedFisik = eLaporList.filter((e) => e.kategoriKasus === 'Fisik' && isCaseResolved(e)).length;
+  const resolvedSiber = eLaporList.filter((e) => e.kategoriKasus === 'Siber' && isCaseResolved(e)).length;
+  const resolvedVerbal = eLaporList.filter((e) => e.kategoriKasus === 'Verbal' && isCaseResolved(e)).length;
+  const resolvedSosial = eLaporList.filter((e) => e.kategoriKasus === 'Sosial/Relasional' && isCaseResolved(e)).length;
+  const resolvedLainnya = eLaporList.filter((e) => e.kategoriKasus === 'Lainnya' && isCaseResolved(e)).length;
 
   // Rekapitulasi Komprehensif dataset computed from eLapor & SP Damai
   const rekapJenisList = [
@@ -101,8 +269,8 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       shortLabel: 'Fisik',
       fullLabel: 'Fisik (Dorongan/Gesekan)',
       cases: fisikCount,
-      pct: Math.round((fisikCount / sumCases) * 100),
-      resolved: Math.min(fisikCount, Math.round((totalTuntas * (fisikCount / sumCases)))),
+      pct: totalKasusReal > 0 ? Math.round((fisikCount / totalKasusReal) * 100) : 0,
+      resolved: resolvedFisik,
       color: '#ef4444',
       dotColor: 'bg-rose-500',
       barColor: 'bg-rose-500',
@@ -112,8 +280,8 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       shortLabel: 'Siber',
       fullLabel: 'Siber (Medsos/Grup Chat)',
       cases: siberCount,
-      pct: Math.round((siberCount / sumCases) * 100),
-      resolved: Math.min(siberCount, Math.round((totalTuntas * (siberCount / sumCases)))),
+      pct: totalKasusReal > 0 ? Math.round((siberCount / totalKasusReal) * 100) : 0,
+      resolved: resolvedSiber,
       color: '#3b82f6',
       dotColor: 'bg-blue-500',
       barColor: 'bg-blue-500',
@@ -123,8 +291,8 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       shortLabel: 'Verbal',
       fullLabel: 'Verbal (Ejekan/Julukan/Hinaan)',
       cases: verbalCount,
-      pct: Math.round((verbalCount / sumCases) * 100),
-      resolved: Math.min(verbalCount, Math.round((totalTuntas * (verbalCount / sumCases)))),
+      pct: totalKasusReal > 0 ? Math.round((verbalCount / totalKasusReal) * 100) : 0,
+      resolved: resolvedVerbal,
       color: '#f59e0b',
       dotColor: 'bg-amber-500',
       barColor: 'bg-amber-500',
@@ -134,8 +302,8 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       shortLabel: 'Sosial / Pengucilan',
       fullLabel: 'Sosial / Pengucilan',
       cases: sosialCount,
-      pct: Math.round((sosialCount / sumCases) * 100),
-      resolved: Math.min(sosialCount, Math.round((totalTuntas * (sosialCount / sumCases)))),
+      pct: totalKasusReal > 0 ? Math.round((sosialCount / totalKasusReal) * 100) : 0,
+      resolved: resolvedSosial,
       color: '#a855f7',
       dotColor: 'bg-purple-500',
       barColor: 'bg-purple-500',
@@ -145,31 +313,107 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       shortLabel: 'Lainnya / Pemalakan',
       fullLabel: 'Lainnya / Pemalakan',
       cases: lainnyaCount,
-      pct: Math.round((lainnyaCount / sumCases) * 100),
-      resolved: Math.min(lainnyaCount, Math.round((totalTuntas * (lainnyaCount / sumCases)))),
+      pct: totalKasusReal > 0 ? Math.round((lainnyaCount / totalKasusReal) * 100) : 0,
+      resolved: resolvedLainnya,
       color: '#10b981',
       dotColor: 'bg-emerald-500',
       barColor: 'bg-emerald-500',
     },
   ];
 
-  // 12 Months dataset for Grafik Penurunan Kasus
-  const monthsData = [
-    { month: 'Jul', reported: 7, resolved: 6 },
-    { month: 'Agu', reported: 6, resolved: 6 },
-    { month: 'Sep', reported: 5, resolved: 5 },
-    { month: 'Okt', reported: 4.5, resolved: 4 },
-    { month: 'Nov', reported: 4, resolved: 4 },
-    { month: 'Des', reported: 4, resolved: 4 },
-    { month: 'Jan 2026', reported: 4, resolved: 4 },
-    { month: 'Feb', reported: 3, resolved: 3 },
-    { month: 'Mar', reported: 2, resolved: 2 },
-    { month: 'Apr', reported: 1, resolved: 1 },
-    { month: 'Mei', reported: 1, resolved: 1 },
-    { month: 'Jun', reported: 0.5, resolved: 0.5 },
-  ];
+  // Helper to extract month index (0: Jan .. 11: Des) from various Indonesian date formats or ISO strings
+  const getMonthIndex = (hariTanggal?: string, createdAt?: string): number => {
+    if (createdAt) {
+      const d = new Date(createdAt);
+      if (!isNaN(d.getTime())) return d.getMonth();
+    }
+    if (hariTanggal) {
+      const s = hariTanggal.toLowerCase();
+      if (s.includes('jan')) return 0;
+      if (s.includes('feb') || s.includes('peb')) return 1;
+      if (s.includes('mar')) return 2;
+      if (s.includes('apr')) return 3;
+      if (s.includes('mei') || s.includes('may')) return 4;
+      if (s.includes('jun')) return 5;
+      if (s.includes('jul')) return 6;
+      if (s.includes('agu') || s.includes('ags')) return 7;
+      if (s.includes('sep')) return 8;
+      if (s.includes('okt') || s.includes('oct')) return 9;
+      if (s.includes('nov') || s.includes('nop')) return 10;
+      if (s.includes('des') || s.includes('dec')) return 11;
 
-  // SVG Chart Dimensions
+      const mMatch = hariTanggal.match(/[-/](\d{1,2})[-/]/);
+      if (mMatch) {
+        const m = parseInt(mMatch[1], 10);
+        if (m >= 1 && m <= 12) return m - 1;
+      }
+    }
+    return 8; // fallback to September (bulan berjalan)
+  };
+
+  // 12 Months sequence in school calendar (Juli to Juni)
+  const academicMonthsConfig = useMemo(
+    () => [
+      { mIdx: 6, label: 'Jul', full: 'Juli' },
+      { mIdx: 7, label: 'Agu', full: 'Agustus' },
+      { mIdx: 8, label: 'Sep', full: 'September' },
+      { mIdx: 9, label: 'Okt', full: 'Oktober' },
+      { mIdx: 10, label: 'Nov', full: 'November' },
+      { mIdx: 11, label: 'Des', full: 'Desember' },
+      { mIdx: 0, label: 'Jan 2026', full: 'Januari 2026' },
+      { mIdx: 1, label: 'Feb', full: 'Februari' },
+      { mIdx: 2, label: 'Mar', full: 'Maret' },
+      { mIdx: 3, label: 'Apr', full: 'April' },
+      { mIdx: 4, label: 'Mei', full: 'Mei' },
+      { mIdx: 5, label: 'Jun', full: 'Juni' },
+    ],
+    []
+  );
+
+  // Real 12 Months dataset computed directly from real eLaporList & spDamaiList
+  const monthsData = useMemo(() => {
+    return academicMonthsConfig.map((cfg) => {
+      // Find real reported cases for this month from eLaporList
+      const reportedCases = eLaporList.filter((e) => {
+        const m = getMonthIndex(e.hariTanggal, e.createdAt);
+        return m === cfg.mIdx;
+      });
+
+      // Find real resolved cases in this month from eLaporList
+      const resolvedFromELapor = reportedCases.filter(
+        (e) => e.status === 'Selesai' || e.status === 'Terpantau Aman'
+      ).length;
+
+      // Also check spDamaiList for this month
+      const spDamaiInMonth = spDamaiList.filter((sp) => {
+        const m = getMonthIndex(sp.hariTanggal, sp.createdAt);
+        return m === cfg.mIdx;
+      }).length;
+
+      const reported = reportedCases.length;
+      const resolved = Math.min(reported, Math.max(resolvedFromELapor, spDamaiInMonth));
+
+      return {
+        month: cfg.label,
+        fullName: cfg.full,
+        reported,
+        resolved,
+      };
+    });
+  }, [academicMonthsConfig, eLaporList, spDamaiList]);
+
+  // Current month cases for Card 4
+  const currentMonthIdx = new Date().getMonth();
+  const currentMonthCases = eLaporList.filter(
+    (e) => getMonthIndex(e.hariTanggal, e.createdAt) === currentMonthIdx
+  ).length;
+  const currentMonthResolved = eLaporList.filter(
+    (e) =>
+      getMonthIndex(e.hariTanggal, e.createdAt) === currentMonthIdx &&
+      (e.status === 'Selesai' || e.status === 'Terpantau Aman')
+  ).length;
+
+  // SVG Chart Dimensions & Dynamic Y Scale
   const chartW = 720;
   const chartH = 220;
   const padL = 40;
@@ -178,26 +422,45 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
   const padB = 40;
   const graphW = chartW - padL - padR;
   const graphH = chartH - padT - padB;
-  const maxY = 8;
+
+  const maxCasesInAnyMonth = Math.max(
+    0,
+    ...monthsData.map((d) => Math.max(d.reported, d.resolved))
+  );
+  const maxY = Math.max(4, maxCasesInAnyMonth + 1);
+
+  const yTicks = useMemo(() => {
+    if (maxY <= 4) return [4, 3, 2, 1, 0];
+    if (maxY <= 6) return [6, 4, 2, 0];
+    if (maxY <= 8) return [8, 6, 4, 2, 0];
+    const step = Math.ceil(maxY / 4);
+    return [step * 4, step * 3, step * 2, step, 0];
+  }, [maxY]);
 
   const getX = (idx: number) => padL + (idx / (monthsData.length - 1)) * graphW;
   const getY = (val: number) => padT + graphH - (val / maxY) * graphH;
 
-  // Generate smooth cubic bezier SVG path
+  // Generate smooth cubic bezier SVG path with clamped control points
   const makeBezierPath = (key: 'reported' | 'resolved') => {
     const pts = monthsData.map((d, i) => ({ x: getX(i), y: getY(d[key]) }));
     if (pts.length === 0) return '';
     let path = `M ${pts[0].x} ${pts[0].y}`;
+    const bottomY = padT + graphH;
+
     for (let i = 0; i < pts.length - 1; i++) {
       const p0 = pts[i === 0 ? 0 : i - 1];
       const p1 = pts[i];
       const p2 = pts[i + 1];
       const p3 = pts[i + 2 < pts.length ? i + 2 : pts.length - 1];
 
-      const cp1x = p1.x + (p2.x - p0.x) / 6;
-      const cp1y = p1.y + (p2.y - p0.y) / 6;
-      const cp2x = p2.x - (p3.x - p1.x) / 6;
-      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      let cp1x = p1.x + (p2.x - p0.x) / 6;
+      let cp1y = p1.y + (p2.y - p0.y) / 6;
+      let cp2x = p2.x - (p3.x - p1.x) / 6;
+      let cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      // Clamp control points so line never dips under baseline
+      cp1y = Math.min(Math.max(cp1y, padT), bottomY);
+      cp2y = Math.min(Math.max(cp2y, padT), bottomY);
 
       path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
     }
@@ -321,16 +584,22 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
           {/* Card 4: Tren Penurunan Kasus */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500">Tren Penurunan Kasus</span>
-              <TrendingDown className="w-5 h-5 text-amber-500" />
+              <span className="text-xs font-semibold text-slate-500">Penyelesaian Kasus</span>
+              <TrendingDown className="w-5 h-5 text-emerald-600" />
             </div>
             <div className="mt-3">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-3xl sm:text-4xl font-black text-amber-600">-92.5%</span>
-                <span className="text-xs font-semibold text-slate-500">12 Bulan Terakhir</span>
+                <span className="text-3xl sm:text-4xl font-black text-emerald-600">
+                  {totalKasusReal > 0
+                    ? `${Math.round((totalTuntasReal / totalKasusReal) * 100)}%`
+                    : '100%'}
+                </span>
+                <span className="text-xs font-semibold text-slate-500">Tuntas Terfasilitasi</span>
               </div>
-              <div className="text-xs font-bold text-amber-600 mt-2">
-                Bulan ini: 3 Insiden
+              <div className="text-xs font-bold text-slate-600 mt-2">
+                {currentMonthCases > 0
+                  ? `Bulan ini: ${currentMonthCases} Insiden (${currentMonthResolved} Selesai)`
+                  : 'Bulan ini: 0 Insiden (Kondusif)'}
               </div>
             </div>
           </div>
@@ -386,7 +655,7 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
                 </linearGradient>
               </defs>
 
-              {[8, 6, 4, 2, 0].map((val) => {
+              {yTicks.map((val) => {
                 const y = getY(val);
                 return (
                   <g key={val}>
@@ -495,13 +764,20 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
                 className="absolute pointer-events-none transform -translate-x-1/2 -translate-y-2 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-200/90 shadow-xl text-left whitespace-nowrap z-20 animate-in fade-in zoom-in-95 duration-150"
               >
                 <div className="text-xs font-black text-slate-800 pb-1 border-b border-slate-100">
-                  {monthsData[hoveredMonthIndex].month}
+                  {monthsData[hoveredMonthIndex].fullName || monthsData[hoveredMonthIndex].month}
                 </div>
                 <div className="text-xs font-bold text-rose-600 mt-1">
                   Kasus Dilaporkan : {monthsData[hoveredMonthIndex].reported}
                 </div>
                 <div className="text-xs font-bold text-emerald-600">
                   Kasus Terselesaikan : {monthsData[hoveredMonthIndex].resolved}
+                </div>
+                <div className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                  {monthsData[hoveredMonthIndex].reported === 0
+                    ? 'Zero Bullying (Kondusif)'
+                    : monthsData[hoveredMonthIndex].resolved === monthsData[hoveredMonthIndex].reported
+                    ? '100% Tuntas Terfasilitasi'
+                    : `${monthsData[hoveredMonthIndex].reported - monthsData[hoveredMonthIndex].resolved} Kasus Dalam Mediasi`}
                 </div>
               </div>
             )}
@@ -532,32 +808,50 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
                 stroke="#f1f5f9"
                 strokeWidth="18"
               />
-              {categories.map((c) => {
-                const strokeLength = (c.pct / 100) * donutCircumference;
-                const strokeOffset = -accumulatedAngle;
-                accumulatedAngle += strokeLength;
+              {(() => {
+                let currentAngle = 0;
+                if (totalKasusReal === 0) {
+                  return (
+                    <circle
+                      cx="70"
+                      cy="70"
+                      r={donutR}
+                      fill="transparent"
+                      stroke="#10b981"
+                      strokeWidth="18"
+                      strokeDasharray={`${donutCircumference} 0`}
+                    />
+                  );
+                }
+                return categories.map((c) => {
+                  const strokeLength = (c.pct / 100) * donutCircumference;
+                  const strokeOffset = -currentAngle;
+                  currentAngle += strokeLength;
 
-                return (
-                  <circle
-                    key={c.label}
-                    cx="70"
-                    cy="70"
-                    r={donutR}
-                    fill="transparent"
-                    stroke={c.color}
-                    strokeWidth="18"
-                    strokeDasharray={`${strokeLength} ${donutCircumference - strokeLength}`}
-                    strokeDashoffset={strokeOffset}
-                    strokeLinecap="round"
-                    className="transition-all duration-700 ease-out"
-                  />
-                );
-              })}
+                  return (
+                    <circle
+                      key={c.label}
+                      cx="70"
+                      cy="70"
+                      r={donutR}
+                      fill="transparent"
+                      stroke={c.color}
+                      strokeWidth="18"
+                      strokeDasharray={`${strokeLength} ${donutCircumference - strokeLength}`}
+                      strokeDashoffset={strokeOffset}
+                      strokeLinecap="round"
+                      className="transition-all duration-700 ease-out"
+                    />
+                  );
+                });
+              })()}
             </svg>
 
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-              <span className="text-2xl font-black text-slate-900">25</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kasus Real</span>
+              <span className="text-2xl font-black text-slate-900">{totalKasusReal}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {totalKasusReal === 0 ? 'Zero Bullying' : 'Kasus Real'}
+              </span>
             </div>
           </div>
 
@@ -597,7 +891,9 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
 
           {/* Top Right Stat Box */}
           <div className="bg-slate-50 border border-slate-200/90 rounded-2xl px-5 py-3 flex items-center gap-4 flex-shrink-0 self-start md:self-auto">
-            <span className="text-xs font-semibold text-slate-500">Total Kasus<br className="hidden sm:block" /> Masuk:</span>
+            <span className="text-xs font-semibold text-slate-500">
+              Total Kasus<br className="hidden sm:block" /> Masuk:
+            </span>
             <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-black text-slate-900">{totalInsiden}</span>
               <span className="text-xs font-bold text-slate-600">Insiden</span>
@@ -606,6 +902,11 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
             <div className="flex items-baseline gap-1.5">
               <span className="text-2xl font-black text-emerald-600">{totalTuntas}</span>
               <span className="text-xs font-bold text-emerald-700">Tuntas</span>
+              {totalInsiden > 0 && totalTuntas === totalInsiden && (
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded ml-1">
+                  100%
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -615,40 +916,49 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
           {/* Left: Horizontal Bar Chart (~55%) */}
           <div className="col-span-12 lg:col-span-7 bg-slate-50/50 rounded-2xl p-5 border border-slate-100">
             <div className="relative">
-              {/* Vertical Gridlines at 0, 1, 2, 3, 4 */}
-              <div className="absolute top-0 bottom-6 left-36 right-4 flex justify-between pointer-events-none">
-                {[0, 1, 2, 3, 4].map((tick) => (
-                  <div key={tick} className="border-r border-slate-200/80 h-full relative">
-                    <span className="absolute -bottom-6 -translate-x-1/2 text-[11px] font-semibold text-slate-400">
-                      {tick}
-                    </span>
+              {/* Dynamic Gridlines */}
+              {(() => {
+                const maxRekapCases = Math.max(4, ...rekapJenisList.map((i) => i.cases));
+                const ticks = [0, 1, 2, 3, 4].map((t) => Math.round((t / 4) * maxRekapCases));
+                return (
+                  <div className="absolute top-0 bottom-6 left-36 right-4 flex justify-between pointer-events-none">
+                    {ticks.map((tick, tIdx) => (
+                      <div key={`${tick}-${tIdx}`} className="border-r border-slate-200/80 h-full relative">
+                        <span className="absolute -bottom-6 -translate-x-1/2 text-[11px] font-semibold text-slate-400">
+                          {tick}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
 
               {/* Rows */}
               <div className="space-y-4 pb-6">
-                {rekapJenisList.map((item) => {
-                  const widthPercent = (item.cases / 4) * 100;
-                  return (
-                    <div key={item.id} className="flex items-center gap-3">
-                      {/* Y-Axis Label */}
-                      <div className="w-32 text-right text-xs font-semibold text-slate-600 truncate flex-shrink-0">
-                        {item.shortLabel}
-                      </div>
+                {(() => {
+                  const maxRekapCases = Math.max(1, ...rekapJenisList.map((i) => i.cases));
+                  return rekapJenisList.map((item) => {
+                    const widthPercent = (item.cases / maxRekapCases) * 100;
+                    return (
+                      <div key={item.id} className="flex items-center gap-3">
+                        {/* Y-Axis Label */}
+                        <div className="w-32 text-right text-xs font-semibold text-slate-600 truncate flex-shrink-0">
+                          {item.shortLabel}
+                        </div>
 
-                      {/* Bar Track & Fill */}
-                      <div className="flex-1 h-6 relative flex items-center pr-4">
-                        {item.cases > 0 && (
-                          <div
-                            style={{ width: `${widthPercent}%` }}
-                            className={`h-5 rounded-r-lg transition-all duration-700 ${item.barColor} shadow-2xs`}
-                          />
-                        )}
+                        {/* Bar Track & Fill */}
+                        <div className="flex-1 h-6 relative flex items-center pr-4">
+                          {item.cases > 0 && (
+                            <div
+                              style={{ width: `${widthPercent}%` }}
+                              className={`h-5 rounded-r-lg transition-all duration-700 ${item.barColor} shadow-2xs`}
+                            />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
@@ -667,7 +977,9 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
                       {item.fullLabel}
                     </div>
                     <div className="text-[11px] text-slate-500 mt-0.5">
-                      Penyelesaian damai: {item.resolved} dari {item.cases} kasus (100%)
+                      {item.cases === 0
+                        ? 'Nihil insiden (100% Kondusif)'
+                        : `Penyelesaian damai: ${item.resolved} dari ${item.cases} kasus (${Math.round((item.resolved / item.cases) * 100)}%)`}
                     </div>
                   </div>
                 </div>
