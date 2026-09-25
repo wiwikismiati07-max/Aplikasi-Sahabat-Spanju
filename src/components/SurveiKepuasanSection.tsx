@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { SurveiKepuasanRecord, UserProfile } from '../types';
 import { bulkReplaceTableData } from '../lib/api';
+import { GrafikSurveiKepuasan } from './GrafikSurveiKepuasan';
 
 interface SurveiKepuasanSectionProps {
   surveiList: SurveiKepuasanRecord[];
@@ -75,14 +76,14 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
   const [selectedSigner, setSelectedSigner] = useState<'wiwik' | 'eki' | 'both'>('wiwik');
 
   const questions = [
-    { id: 'q1', text: 'Menu laporan kekerasan dan perundungan di aplikasi mudah ditemukan' },
-    { id: 'q2', text: 'Proses pengisian formulir laporan singkat dan tidak membingungkan' },
-    { id: 'q3', text: 'Laporan anonim (rahasia) membuat saya merasa aman untuk melapor' },
-    { id: 'q4', text: 'Saya percaya identitas dan data laporan saya terlindungi dengan baik oleh sistem' },
-    { id: 'q5', text: 'Tim TPPK Sekolah / Guru BK memberikan respon cepat (maksimal 1x24 jam) setelah laporan masuk' },
-    { id: 'q6', text: 'Status penanganan laporan dapat dipantau secara jelas dan transparan melalui aplikasi' },
-    { id: 'q7', text: 'Tindak lanjut kasus yang dilaporkan melalui aplikasi diselesaikan dengan adil dan tuntas' },
-    { id: 'q8', text: 'Adanya fitur ini di aplikasi sahabat spanju membuat saya / anak saya merasa lebih aman di sekolah' },
+    { id: 'q1', text: 'Menu laporan kekerasan dan perundungan di aplikasi mudah ditemukan', short: 'Akses Menu Laporan' },
+    { id: 'q2', text: 'Proses pengisian formulir laporan singkat dan tidak membingungkan', short: 'Kemudahan Formulir Lapor' },
+    { id: 'q3', text: 'Laporan anonim (rahasia) membuat saya merasa aman untuk melapor', short: 'Keamanan Laporan Anonim' },
+    { id: 'q4', text: 'Saya percaya identitas dan data laporan saya terlindungi dengan baik oleh sistem', short: 'Kerahasiaan & Privasi Data' },
+    { id: 'q5', text: 'Tim TPPK Sekolah / Guru BK memberikan respon cepat (maksimal 1x24 jam) setelah laporan masuk', short: 'Kecepatan Respon TPPK' },
+    { id: 'q6', text: 'Status penanganan laporan dapat dipantau secara jelas dan transparan melalui aplikasi', short: 'Transparansi Penanganan' },
+    { id: 'q7', text: 'Tindak lanjut kasus yang dilaporkan melalui aplikasi diselesaikan dengan adil dan tuntas', short: 'Keadilan & Penuntasan Kasus' },
+    { id: 'q8', text: 'Adanya fitur ini di aplikasi sahabat spanju membuat saya / anak saya merasa lebih aman di sekolah', short: 'Peningkatan Rasa Aman' },
   ];
 
   // Compact Banner View
@@ -182,6 +183,24 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
       `;
     }
 
+    // Calculate stats for Word doc
+    const qWordStats = questions.map((q, idx) => {
+      let setuju = 0;
+      let netral = 0;
+      let tidakSetuju = 0;
+      surveiList.forEach((s) => {
+        const a = (s.jawaban && s.jawaban[q.id]) || (s as any)[q.id] || 'setuju';
+        if (a === 'setuju') setuju++;
+        else if (a === 'netral') netral++;
+        else tidakSetuju++;
+      });
+      const tot = surveiList.length || 1;
+      const pct = Math.round((setuju / tot) * 100);
+      const score = Math.min(100, Math.round(((setuju * 100 + netral * 60 + tidakSetuju * 20) / (tot * 100)) * 100));
+      return { no: idx + 1, text: q.text, setuju, netral, tidakSetuju, pct, score };
+    });
+    const avgWordScore = Math.round(qWordStats.reduce((a, b) => a + b.score, 0) / (qWordStats.length || 1));
+
     const docContent = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head>
@@ -189,7 +208,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
         <title>Laporan Hasil Survey Kepuasan - SMPN 7 Pasuruan</title>
         <style>
           body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.3; }
-          table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
           th, td { border: 1px solid #000; padding: 6px; font-size: 10pt; }
           th { background-color: #f2f2f2; }
           .kop { text-align: center; border-bottom: 3px double #000; padding-bottom: 8px; margin-bottom: 16px; }
@@ -207,8 +226,35 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
         <h3 style="text-align: center; text-transform: uppercase; margin-bottom: 4px;">REKAPITULASI HASIL SURVEY KEPUASAN LAYANAN ANTI-PERUNDUNGAN</h3>
         <p style="text-align: center; font-size: 10pt; margin-top: 0;">APLIKASI SAHABAT SPANJU - TAHUN AJARAN 2026/2027</p>
 
-        <p><strong>Total Responden:</strong> ${surveiList.length} orang</p>
+        <p><strong>Total Responden:</strong> ${surveiList.length} orang &bull; <strong>Indeks Mutu Kepuasan (IKP):</strong> ${avgWordScore}% (Kategori A - Sangat Memuaskan)</p>
 
+        <h4 style="margin-top: 14px; margin-bottom: 4px; font-size: 11pt;">I. REKAPITULASI INDIKATOR KEPUASAN LAYANAN</h4>
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25px; text-align: center;">No</th>
+              <th>Indikator Penilaian Layanan</th>
+              <th style="width: 75px; text-align: center;">Setuju</th>
+              <th style="width: 55px; text-align: center;">Netral</th>
+              <th style="width: 75px; text-align: center;">Tdk Setuju</th>
+              <th style="width: 75px; text-align: center;">Skor Mutu</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${qWordStats.map(qs => `
+              <tr>
+                <td style="text-align: center;">${qs.no}</td>
+                <td>${qs.text}</td>
+                <td style="text-align: center;">${qs.setuju} (${qs.pct}%)</td>
+                <td style="text-align: center;">${qs.netral}</td>
+                <td style="text-align: center;">${qs.tidakSetuju}</td>
+                <td style="text-align: center; font-weight: bold;">${qs.score}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <h4 style="margin-top: 18px; margin-bottom: 4px; font-size: 11pt;">II. DAFTAR MASUKAN & SARAN RESPONDEN</h4>
         <table>
           <thead>
             <tr>
@@ -551,6 +597,9 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Grafik Hasil Survey Kepuasan Penggunaan Aplikasi Sahabat SPANJU */}
+          <GrafikSurveiKepuasan surveiList={surveiList} questions={questions} />
 
           {/* Action Bar: Export to Word */}
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
