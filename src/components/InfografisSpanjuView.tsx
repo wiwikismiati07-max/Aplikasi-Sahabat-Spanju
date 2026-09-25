@@ -28,8 +28,7 @@ export const InfografisSpanjuView: React.FC<InfografisSpanjuViewProps> = ({
   const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 0.25, 0.75));
   const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
 
-  const infografisImgUrl =
-    'https://i.ibb.co.com/n8tswpfq/INFOGRAFIS-APLIKASI-SAHABAT-SPANJU.jpg';
+  const infografisImgUrl = '/infografis-sahabat-spanju.jpg';
   const logoPassTemenan =
     'https://i.ibb.co.com/pBbfS44d/LOGO-PASS-TEMENAN.jpg';
 

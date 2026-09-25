@@ -45,7 +45,10 @@ export const KopSurat: React.FC<KopSuratProps> = ({ judulDokumen, className = ''
         {/* Right Logo: SMPN 7 Pasuruan */}
         <div className="flex-shrink-0">
           <img
-            src="https://iili.io/KDFk4fI.png"
+            src="/logo-smpn7.png"
+            onError={(e) => {
+              e.currentTarget.src = 'https://iili.io/KDFk4fI.png';
+            }}
             alt="Logo SMPN 7 Pasuruan"
             className="h-16 w-auto object-contain max-w-[65px]"
             crossOrigin="anonymous"
