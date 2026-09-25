@@ -121,7 +121,7 @@ export const SenandungSerasiView: React.FC<SenandungSerasiViewProps> = ({
         penulis: penulis || 'Duta Sahabat SPANJU',
         keterangan,
         tandaTanganUrl,
-        namaPenandatangan: 'WIWIK ISMIATI, S.Pd',
+        namaPenandatangan: 'Wiwik Ismiati, S.Pd',
         jabatanPenandatangan: 'Koordinator TPPK / Guru BK',
       });
     }
@@ -422,10 +422,10 @@ export const SenandungSerasiView: React.FC<SenandungSerasiViewProps> = ({
           onClose={() => setPrintingRecord(null)}
           judulDokumen="LEMBAR PUBLIKASI SENANDUNG SERASI"
           tandaTanganUrl={printingRecord.tandaTanganUrl}
-          namaPenandatangan="WIWIK ISMIATI, S.Pd"
+          namaPenandatangan="Wiwik Ismiati, S.Pd"
           jabatanPenandatangan="Koordinator TPPK / Guru BK"
           nipPenandatangan="19831116 200904 2 003"
-          namaKepalaSekolah="NUR FADILAH, S.Pd., M.Pd"
+          namaKepalaSekolah="Nur Fadilah, S.Pd,.M.Pd"
           nipKepalaSekolah="19860410 201001 2 030"
           tanggalDokumen={`Pasuruan, ${printingRecord.hariTanggal.split(',')[1] || printingRecord.hariTanggal}`}
         >

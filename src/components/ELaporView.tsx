@@ -277,9 +277,9 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
         status,
         kategoriKasus,
         tandaTanganUrl,
-        namaPenandatangan: 'WIWIK ISMIATI, S.Pd',
+        namaPenandatangan: 'Wiwik Ismiati, S.Pd',
         jabatanPenandatangan: 'Koordinator TPPK / Guru BK',
-        namaPetugas: 'WIWIK ISMIATI, S.Pd',
+        namaPetugas: 'Wiwik Ismiati, S.Pd',
       });
     }
     resetForm();
@@ -783,10 +783,10 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
           onClose={() => setPrintingRecord(null)}
           judulDokumen="BERITA ACARA E-LAPOR PERUNDUNGAN DAN KEKERASAN"
           tandaTanganUrl={printingRecord.tandaTanganUrl}
-          namaPenandatangan="WIWIK ISMIATI, S.Pd"
+          namaPenandatangan="Wiwik Ismiati, S.Pd"
           jabatanPenandatangan="Koordinator TPPK / Guru BK"
           nipPenandatangan="19831116 200904 2 003"
-          namaKepalaSekolah="NUR FADILAH, S.Pd., M.Pd"
+          namaKepalaSekolah="Nur Fadilah, S.Pd,.M.Pd"
           nipKepalaSekolah="19860410 201001 2 030"
           tanggalDokumen={`Pasuruan, ${printingRecord.hariTanggal.split(',')[1] || printingRecord.hariTanggal}`}
         >

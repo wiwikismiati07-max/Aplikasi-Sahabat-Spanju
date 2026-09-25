@@ -19,12 +19,13 @@ import {
 } from 'lucide-react';
 import { SiswaMaster, GuruMaster } from '../types';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { INITIAL_GURU, INITIAL_SISWA } from '../data/initialData';
 
 /* ====================================================================
  * MASTER DATA SISWA VIEW
  * ==================================================================== */
 interface MasterSiswaViewProps {
-  siswaList: SiswaMaster[];
+  siswaList?: SiswaMaster[];
   onAddSiswa: (siswa: SiswaMaster) => void;
   onImportBulkSiswa: (list: SiswaMaster[], replaceAll?: boolean) => void;
   onClearAllSiswa?: () => void;
@@ -34,7 +35,7 @@ interface MasterSiswaViewProps {
 }
 
 export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
-  siswaList,
+  siswaList = [],
   onAddSiswa,
   onImportBulkSiswa,
   onClearAllSiswa,
@@ -55,6 +56,17 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
   const [nisn, setNisn] = useState('');
   const [kelas, setKelas] = useState('7A');
   const [jenisKelamin, setJenisKelamin] = useState<'L' | 'P'>('L');
+
+  const effectiveSiswaList = (siswaList && siswaList.length > 0 ? siswaList : INITIAL_SISWA).map((s, idx) => {
+    const rawJk = s.jenisKelamin || (s as any).jeniskelamin || (s as any).jenis_kelamin || (s as any).jk || 'L';
+    return {
+      ...s,
+      nama: s.nama && s.nama.trim() !== '' ? s.nama : (INITIAL_SISWA[idx % INITIAL_SISWA.length]?.nama || `Siswa ${idx + 1}`),
+      nisn: s.nisn && s.nisn.trim() !== '' ? s.nisn : `009${idx}`,
+      kelas: s.kelas && s.kelas.trim() !== '' ? s.kelas : '7A',
+      jenisKelamin: String(rawJk).toUpperCase().startsWith('P') ? 'P' : 'L',
+    };
+  });
 
   // Excel template export
   const downloadTemplateSiswa = () => {
@@ -81,13 +93,26 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
         const ws = wb.Sheets[wsName];
         const rawData: any[] = XLSX.utils.sheet_to_json(ws);
 
-        const parsed: SiswaMaster[] = rawData.map((row, idx) => ({
-          id: String(Date.now() + idx),
-          nisn: String(row.NISN || row.nisn || `009${idx}`),
-          nama: String(row.Nama || row.nama || row['Nama Siswa'] || 'Siswa Baru'),
-          kelas: String(row.Kelas || row.kelas || '7A').toUpperCase().replace(/\s+/g, ''),
-          jenisKelamin: String(row['Jenis Kelamin'] || row.jenisKelamin || 'L').toUpperCase().startsWith('P') ? 'P' : 'L',
-        }));
+        const parsed: SiswaMaster[] = rawData.map((row, idx) => {
+          const rowKeys = Object.keys(row);
+          const getVal = (keys: string[], def: string) => {
+            for (const k of keys) {
+              const found = rowKeys.find(rk => rk.toLowerCase().replace(/[^a-z0-9]/g, '') === k.toLowerCase().replace(/[^a-z0-9]/g, ''));
+              if (found && row[found] !== undefined && row[found] !== null && String(row[found]).trim() !== '') {
+                return String(row[found]).trim();
+              }
+            }
+            return def;
+          };
+
+          return {
+            id: String(Date.now() + idx),
+            nisn: getVal(['nisn', 'nomorinduksiswa'], `009${idx}`),
+            nama: getVal(['nama', 'namasiswa', 'namalengkap', 'namalengkapgelar'], `Siswa ${idx + 1}`),
+            kelas: getVal(['kelas', 'rombel', 'tingkat'], '7A').toUpperCase().replace(/\s+/g, ''),
+            jenisKelamin: getVal(['jeniskelamin', 'jk', 'gender', 'L/P'], 'L').toUpperCase().startsWith('P') ? 'P' : 'L',
+          };
+        }).filter(s => s.nama && s.nama !== '');
 
         if (parsed.length > 0) {
           setPendingImportList(parsed);
@@ -131,12 +156,12 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
     setIsAddModalOpen(false);
   };
 
-  const filtered = siswaList.filter((s) => {
+  const filtered = effectiveSiswaList.filter((s) => {
     const matchKelas = selectedKelas === 'Semua' || s.kelas === selectedKelas;
     const matchSearch =
-      s.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (s.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (s.nisn && s.nisn.includes(searchQuery)) ||
-      s.kelas.toLowerCase().includes(searchQuery.toLowerCase());
+      (s.kelas || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchKelas && matchSearch;
   });
 
@@ -525,7 +550,7 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
  * MASTER DATA GURU VIEW
  * ==================================================================== */
 interface MasterGuruViewProps {
-  guruList: GuruMaster[];
+  guruList?: GuruMaster[];
   onAddGuru: (guru: GuruMaster) => void;
   onImportBulkGuru: (list: GuruMaster[], replaceAll?: boolean) => void;
   onClearAllGuru?: () => void;
@@ -535,7 +560,7 @@ interface MasterGuruViewProps {
 }
 
 export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
-  guruList,
+  guruList = [],
   onAddGuru,
   onImportBulkGuru,
   onClearAllGuru,
@@ -556,11 +581,19 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
   const [jabatan, setJabatan] = useState('Guru Mata Pelajaran');
   const [statusKepegawaian, setStatusKepegawaian] = useState('PNS');
 
+  const effectiveGuruList = (guruList && guruList.length > 0 ? guruList : INITIAL_GURU).map((g, idx) => ({
+    ...g,
+    nama: g.nama && g.nama.trim() !== '' ? g.nama : (INITIAL_GURU[idx % INITIAL_GURU.length]?.nama || `Guru ${idx + 1}`),
+    jabatan: g.jabatan && g.jabatan.trim() !== '' ? g.jabatan : (INITIAL_GURU[idx % INITIAL_GURU.length]?.jabatan || 'Guru Mata Pelajaran'),
+    nip: g.nip && g.nip.trim() !== '' ? g.nip : '-',
+    statusKepegawaian: g.statusKepegawaian || g.status || 'PNS',
+  }));
+
   // Excel template export
   const downloadTemplateGuru = () => {
     const ws = XLSX.utils.json_to_sheet([
-      { NIP: '19831116 200904 2 003', Nama: 'WIWIK ISMIATI, S.Pd', Jabatan: 'Koordinator TPPK / Guru BK', Status: 'PNS' },
-      { NIP: '19860410 201001 2 030', Nama: 'NUR FADILAH, S.Pd., M.Pd', Jabatan: 'Kepala Sekolah', Status: 'PNS' },
+      { NIP: '19831116 200904 2 003', Nama: 'Wiwik Ismiati, S.Pd', Jabatan: 'Koordinator TPPK / Guru BK', Status: 'PNS' },
+      { NIP: '19860410 201001 2 030', Nama: 'Nur Fadilah, S.Pd,.M.Pd', Jabatan: 'Kepala Sekolah', Status: 'PNS' },
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Template_Guru_SPANJU');
@@ -580,15 +613,57 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
         const wsName = wb.SheetNames[0];
         const ws = wb.Sheets[wsName];
         const rawData: any[] = XLSX.utils.sheet_to_json(ws);
+        const rawDataArray: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
-        const parsed: GuruMaster[] = rawData.map((row, idx) => ({
-          id: String(Date.now() + idx),
-          nip: String(row.NIP || row.nip || '-'),
-          nama: String(row.Nama || row.nama || row['Nama Guru'] || 'Guru Baru'),
-          jabatan: String(row.Jabatan || row.jabatan || 'Guru Mata Pelajaran'),
-          status: String(row.Status || row.status || 'PNS'),
-          statusKepegawaian: String(row.Status || row.status || 'PNS'),
-        }));
+        let sourceRows = rawData.length > 0 ? rawData : [];
+        if (sourceRows.length === 0 && rawDataArray.length > 1) {
+          const headers = rawDataArray[0].map(h => String(h || '').trim());
+          sourceRows = rawDataArray.slice(1).map(r => {
+            const obj: any = {};
+            headers.forEach((h, i) => { if (h) obj[h] = r[i]; });
+            r.forEach((val, i) => { obj[`col${i}`] = val; });
+            return obj;
+          });
+        }
+
+        const parsed: GuruMaster[] = sourceRows.map((row, idx) => {
+          const rowKeys = Object.keys(row);
+          const rowValues = Object.values(row).map(v => String(v || '').trim());
+          const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) || /^[0-9a-f-]{30,}$/i.test(val);
+
+          const getVal = (keys: string[], def: string) => {
+            for (const k of keys) {
+              const found = rowKeys.find(rk => rk.toLowerCase().replace(/[^a-z0-9]/g, '') === k.toLowerCase().replace(/[^a-z0-9]/g, ''));
+              if (found && row[found] !== undefined && row[found] !== null && String(row[found]).trim() !== '' && !isUuid(String(row[found]))) {
+                return String(row[found]).trim();
+              }
+            }
+            return def;
+          };
+
+          let nama = getVal(['nama', 'namalengkap', 'namaguru', 'namalengkapgelar', 'guru', 'namaptk', 'ptk', 'namakaryawan'], '');
+          if (!nama || isUuid(nama)) {
+            const foundStr = rowValues.find(v => v.length > 2 && /[a-zA-Z]/.test(v) && !isUuid(v) && !/^\d+[\s\d\-]*$/.test(v) && !['pns', 'pppk', 'guru'].includes(v.toLowerCase()));
+            if (foundStr) nama = foundStr;
+          }
+          if (!nama || isUuid(nama)) {
+            const nonIdVals = rowValues.filter(v => v && !isUuid(v) && /[a-zA-Z]/.test(v) && !['pns', 'pppk'].includes(v.toLowerCase()));
+            if (nonIdVals.length > 0) nama = nonIdVals[0];
+          }
+
+          const nip = getVal(['nip', 'noindukpegawai', 'nomorinduk', 'nipniy'], '-');
+          const jabatan = getVal(['jabatan', 'peran', 'posisi', 'tugas', 'mengajar'], 'Guru Mata Pelajaran');
+          const status = getVal(['status', 'statuskepegawaian', 'kepegawaian'], 'PNS');
+
+          return {
+            id: String(Date.now() + idx),
+            nip: nip || '-',
+            nama: (nama && !isUuid(nama)) ? nama : `Guru ${idx + 1}`,
+            jabatan: jabatan || 'Guru Mata Pelajaran',
+            status: status || 'PNS',
+            statusKepegawaian: status || 'PNS',
+          };
+        }).filter(g => g.nama && g.nama !== '');
 
         if (parsed.length > 0) {
           setPendingImportList(parsed);
@@ -633,10 +708,10 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
     setIsAddModalOpen(false);
   };
 
-  const filtered = guruList.filter(
+  const filtered = effectiveGuruList.filter(
     (g) =>
-      g.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      g.jabatan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (g.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (g.jabatan || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (g.nip && g.nip.includes(searchQuery))
   );
 
@@ -718,7 +793,7 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
           />
         </div>
 
-        {isAdmin && onClearAllGuru && guruList.length > 0 && (
+        {isAdmin && onClearAllGuru && effectiveGuruList.length > 0 && (
           <button
             type="button"
             onClick={() => setIsClearAllModalOpen(true)}
@@ -735,7 +810,7 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-            Daftar Guru &amp; Tenaga Pendidik ({filtered.length} dari {guruList.length} total)
+            Daftar Guru &amp; Tenaga Pendidik ({filtered.length} dari {effectiveGuruList.length} total)
           </h3>
           <span className="text-[11px] font-semibold text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded">
             Supabase Synced TPPK

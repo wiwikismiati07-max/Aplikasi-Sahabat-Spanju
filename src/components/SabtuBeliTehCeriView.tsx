@@ -105,7 +105,7 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
         linkFoto,
         keterangan,
         tandaTanganUrl,
-        namaPenandatangan: 'EKI FEBRIANI, S.Pd',
+        namaPenandatangan: 'Eki Febriani, S.Pd',
         jabatanPenandatangan: 'Guru BK / Tim TPPK',
       });
     }
@@ -410,10 +410,10 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
           onClose={() => setPrintingRecord(null)}
           judulDokumen="LAPORAN MINGGUAN SABTU BELI TEH CERI"
           tandaTanganUrl={printingRecord.tandaTanganUrl}
-          namaPenandatangan="EKI FEBRIANI, S.Pd"
+          namaPenandatangan="Eki Febriani, S.Pd"
           jabatanPenandatangan="Guru BK / Tim TPPK"
           nipPenandatangan="19940214 202221 2 014"
-          namaKepalaSekolah="NUR FADILAH, S.Pd., M.Pd"
+          namaKepalaSekolah="Nur Fadilah, S.Pd,.M.Pd"
           nipKepalaSekolah="19860410 201001 2 030"
           tanggalDokumen={`Pasuruan, ${printingRecord.hariTanggal.split(',')[1] || printingRecord.hariTanggal}`}
         >

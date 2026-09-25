@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { X, Search, GraduationCap } from 'lucide-react';
 import { GuruMaster } from '../types';
+import { INITIAL_GURU } from '../data/initialData';
 
 interface TeacherPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (guru: GuruMaster) => void;
-  guruList: GuruMaster[];
+  guruList?: GuruMaster[];
   title?: string;
 }
 
@@ -14,18 +15,43 @@ export const TeacherPickerModal: React.FC<TeacherPickerModalProps> = ({
   isOpen,
   onClose,
   onSelect,
-  guruList,
+  guruList = [],
   title = 'Pilih Guru dari Master Data',
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   if (!isOpen) return null;
 
-  const filteredTeachers = guruList.filter((g) => {
+  const rawList = guruList && guruList.length > 0 ? guruList : [];
+  const effectiveGuruList = rawList.map((g, idx) => {
+    const rowValues = Object.values(g).map(v => String(v || '').trim());
+    const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) || /^[0-9a-f-]{30,}$/i.test(val);
+
+    let rawName = g.nama || (g as any).namaLengkap || (g as any)['Nama'] || (g as any)['Nama Guru'] || (g as any)['nama'] || (g as any)['Nama PTK'];
+    if (!rawName || isUuid(String(rawName)) || String(rawName).startsWith('Guru ')) {
+      const foundStr = rowValues.find(v => v && v.length > 2 && /[a-zA-Z]/.test(v) && !isUuid(v) && !/^\d+[\s\d\-]*$/.test(v) && !['pns', 'pppk'].includes(v.toLowerCase()));
+      if (foundStr) rawName = foundStr;
+    }
+    if (!rawName || isUuid(String(rawName))) {
+      const nonIdVals = rowValues.filter(v => v && !isUuid(v) && /[a-zA-Z]/.test(v) && !['pns', 'pppk'].includes(v.toLowerCase()));
+      if (nonIdVals.length > 0) rawName = nonIdVals[0];
+    }
+
+    const rawNip = g.nip || (g as any)['NIP'] || (g as any)['nip'] || (g as any)['No. Induk'] || '-';
+    const rawJabatan = g.jabatan || (g as any)['Jabatan'] || (g as any)['jabatan'] || (g as any)['Tugas'] || 'Guru Mata Pelajaran';
+    return {
+      ...g,
+      nama: (rawName && !isUuid(String(rawName))) ? String(rawName).trim() : `Guru ${idx + 1}`,
+      nip: rawNip && String(rawNip).trim() !== '' ? String(rawNip).trim() : '-',
+      jabatan: rawJabatan && String(rawJabatan).trim() !== '' ? String(rawJabatan).trim() : 'Guru Mata Pelajaran',
+    };
+  });
+
+  const filteredTeachers = effectiveGuruList.filter((g) => {
     return (
-      g.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (g.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (g.nip ? g.nip.toLowerCase().includes(searchQuery.toLowerCase()) : false) ||
-      g.jabatan.toLowerCase().includes(searchQuery.toLowerCase())
+      (g.jabatan || '').toLowerCase().includes(searchQuery.toLowerCase())
     );
   });
 

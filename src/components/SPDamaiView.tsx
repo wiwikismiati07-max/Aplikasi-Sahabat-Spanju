@@ -260,7 +260,7 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
         ttdPihak1,
         ttdPihak2,
         ttdSaksi,
-        namaKepalaSekolah: 'NUR FADILAH, S.Pd., M.Pd',
+        namaKepalaSekolah: 'Nur Fadilah, S.Pd,.M.Pd',
         nipKepalaSekolah: '19860410 201001 2 030',
       });
     }
@@ -625,10 +625,10 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
           onClose={() => setPrintingRecord(null)}
           judulDokumen="SURAT KESEPAKATAN DAMAI SISWA (RESTORATIVE JUSTICE)"
           tandaTanganUrl={printingRecord.ttdSaksi}
-          namaPenandatangan="WIWIK ISMIATI, S.Pd"
+          namaPenandatangan="Wiwik Ismiati, S.Pd"
           jabatanPenandatangan="Koordinator TPPK / Guru BK"
           nipPenandatangan="19831116 200904 2 003"
-          namaKepalaSekolah="NUR FADILAH, S.Pd., M.Pd"
+          namaKepalaSekolah="Nur Fadilah, S.Pd,.M.Pd"
           nipKepalaSekolah="19860410 201001 2 030"
           tanggalDokumen={`Pasuruan, ${printingRecord.hariTanggal.split(',')[1] || printingRecord.hariTanggal}`}
         >
@@ -709,7 +709,7 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
                     <div className="text-slate-300 italic">(Ttd)</div>
                   )}
                 </div>
-                <p className="font-bold underline">{printingRecord.namaSaksi || 'WIWIK ISMIATI, S.Pd'}</p>
+                <p className="font-bold underline">{printingRecord.namaSaksi || 'Wiwik Ismiati, S.Pd'}</p>
               </div>
             </div>
           </div>

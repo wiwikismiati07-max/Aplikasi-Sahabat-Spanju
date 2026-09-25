@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { X, Search, UserCheck } from 'lucide-react';
 import { SiswaMaster } from '../types';
+import { INITIAL_SISWA } from '../data/initialData';
 
 interface StudentPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (siswa: SiswaMaster) => void;
-  siswaList: SiswaMaster[];
+  siswaList?: SiswaMaster[];
   title?: string;
   defaultClassFilter?: string;
 }
@@ -15,14 +16,35 @@ export const StudentPickerModal: React.FC<StudentPickerModalProps> = ({
   isOpen,
   onClose,
   onSelect,
-  siswaList,
+  siswaList = [],
   title = 'Pilih Siswa dari Master Data',
   defaultClassFilter = '',
 }) => {
   const [selectedClass, setSelectedClass] = useState<string>(defaultClassFilter);
   const [searchQuery, setSearchQuery] = useState('');
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setSelectedClass(defaultClassFilter);
+    }
+  }, [isOpen, defaultClassFilter]);
+
   if (!isOpen) return null;
+
+  const rawList = siswaList && siswaList.length > 0 ? siswaList : INITIAL_SISWA;
+  const effectiveSiswaList = rawList.map((s, idx) => {
+    const rawName = s.nama || (s as any).namaLengkap || (s as any)['Nama'] || (s as any)['Nama Siswa'] || (s as any)['nama'];
+    const rawNis = s.nisn || (s as any)['NISN'] || (s as any)['nisn'] || `009${idx}`;
+    const rawKelas = s.kelas || (s as any)['Kelas'] || (s as any)['kelas'] || '7A';
+    const rawJk = s.jenisKelamin || (s as any).jeniskelamin || (s as any).jenis_kelamin || (s as any).jk || 'L';
+    return {
+      ...s,
+      nama: rawName && String(rawName).trim() !== '' ? String(rawName).trim() : (INITIAL_SISWA[idx % INITIAL_SISWA.length]?.nama || `Siswa ${idx + 1}`),
+      nisn: rawNis && String(rawNis).trim() !== '' ? String(rawNis).trim() : `009${idx}`,
+      kelas: rawKelas && String(rawKelas).trim() !== '' ? String(rawKelas).trim() : '7A',
+      jenisKelamin: String(rawJk).toUpperCase().startsWith('P') ? 'P' : 'L',
+    };
+  });
 
   const classes = [
     'Semua',
@@ -31,12 +53,12 @@ export const StudentPickerModal: React.FC<StudentPickerModalProps> = ({
     '9A', '9B', '9C', '9D', '9E', '9F', '9G', '9H',
   ];
 
-  const filteredStudents = siswaList.filter((s) => {
+  const filteredStudents = effectiveSiswaList.filter((s) => {
     const matchClass = !selectedClass || selectedClass === 'Semua' || s.kelas === selectedClass;
     const matchQuery =
-      s.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (s.nama || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (s.nisn ? s.nisn.toLowerCase().includes(searchQuery.toLowerCase()) : false) ||
-      s.kelas.toLowerCase().includes(searchQuery.toLowerCase());
+      (s.kelas || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchClass && matchQuery;
   });
 

@@ -82,7 +82,7 @@ export default function App() {
   // Current User Session (Default Admin: Wiwik Ismiati, S.Pd)
   const [currentUser, setCurrentUser] = useState<UserProfile>({
     id: 'user_admin',
-    nama: 'WIWIK ISMIATI, S.Pd',
+    nama: 'Wiwik Ismiati, S.Pd',
     role: 'admin',
     jabatan: 'Koordinator TPPK / Guru BK',
     nip: '19831116 200904 2 003',
@@ -91,7 +91,11 @@ export default function App() {
   // State Collections with localStorage + Supabase fallbacks
   const [kelasList, setKelasList] = useState<KelasZona[]>(() => {
     const saved = localStorage.getItem('spanju_kelas_v1');
-    return saved ? JSON.parse(saved) : initialKelasZona;
+    const raw = saved ? JSON.parse(saved) : initialKelasZona;
+    return raw.map((k: any) => ({
+      ...k,
+      id: k.id || `kelas-${String(k.kelas || '').toLowerCase().trim()}`
+    }));
   });
 
   const [piketList, setPiketList] = useState<PiketRecord[]>(() => {
@@ -136,7 +140,24 @@ export default function App() {
 
   const [guruList, setGuruList] = useState<GuruMaster[]>(() => {
     const saved = localStorage.getItem('spanju_guru_v1');
-    return saved ? JSON.parse(saved) : initialGuru;
+    try {
+      const parsed = saved ? JSON.parse(saved) : null;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) || /^[0-9a-f-]{30,}$/i.test(val);
+        const oldDeletedNames = ['bambang sutrisno', 'siti rahmawati', 'ahmad fauzi', 'dewi lestari', 'hadi prasetyo', 'nurul hidayati', 'tri wibowo'];
+        const cleaned = parsed.map((g, idx) => {
+          let name = g.nama || '';
+          if (isUuid(name)) {
+            const rowValues = Object.values(g).map(v => String(v || '').trim());
+            const foundStr = rowValues.find(v => v && v.length > 2 && /[a-zA-Z]/.test(v) && !isUuid(v) && !/^\d+[\s\d\-]*$/.test(v) && !['pns', 'pppk'].includes(v.toLowerCase()));
+            name = foundStr || `Guru ${idx + 1}`;
+          }
+          return { ...g, nama: name };
+        }).filter(g => !oldDeletedNames.includes((g.nama || '').toLowerCase().trim()));
+        if (cleaned.length > 0) return cleaned;
+      }
+    } catch (e) {}
+    return initialGuru;
   });
 
   const [mediaList, setMediaList] = useState<MediaEdukasiItem[]>(() => {
@@ -204,7 +225,12 @@ export default function App() {
       try {
         const cloudKelas = await fetchTableData<KelasZona>('kelas_zona');
         if (cloudKelas && cloudKelas.length > 0) {
-          setKelasList(cloudKelas);
+          const mapped = cloudKelas.map((k: any) => ({
+            ...k,
+            id: k.id || `kelas-${String(k.kelas || '').toLowerCase().trim()}`
+          }));
+          setKelasList(mapped);
+          localStorage.setItem('spanju_kelas_v1', JSON.stringify(mapped));
         } else if (kelasList.length > 0) {
           bulkReplaceTableData('kelas_zona', kelasList);
         }
@@ -303,9 +329,11 @@ export default function App() {
 
   // Handler helpers with synchronized Supabase operations
   const handleUpdateKelas = (kelasName: string, updated: Partial<KelasZona>) => {
+    const cleanName = String(kelasName || '').trim();
     setKelasList((prev) => {
-      const next = prev.map((k) => (k.kelas === kelasName ? { ...k, ...updated } : k));
-      const updatedItem = next.find((k) => k.kelas === kelasName);
+      const next = prev.map((k) => (String(k.kelas || '').trim().toLowerCase() === cleanName.toLowerCase() ? { ...k, ...updated } : k));
+      localStorage.setItem('spanju_kelas_v1', JSON.stringify(next));
+      const updatedItem = next.find((k) => String(k.kelas || '').trim().toLowerCase() === cleanName.toLowerCase());
       if (updatedItem) saveTableData('kelas_zona', updatedItem);
       return next;
     });
@@ -780,6 +808,7 @@ export default function App() {
               guruList={guruList}
               siswaList={siswaList}
               eLaporList={eLaporList}
+              spDamaiList={spDamaiList}
               onOpenMenu={() => setActiveTab('menu_utama')}
               isAdmin={isAdmin}
             />

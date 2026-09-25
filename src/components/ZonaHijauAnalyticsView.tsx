@@ -19,7 +19,7 @@ import {
   ChevronDown,
   ArrowUpDown,
 } from 'lucide-react';
-import { KelasZona, GuruMaster, SiswaMaster, ELaporRecord } from '../types';
+import { KelasZona, GuruMaster, SiswaMaster, ELaporRecord, SPDamaiRecord } from '../types';
 import { StudentPickerModal } from './StudentPickerModal';
 import { TeacherPickerModal } from './TeacherPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
@@ -30,6 +30,7 @@ interface ZonaHijauAnalyticsViewProps {
   guruList: GuruMaster[];
   siswaList: SiswaMaster[];
   eLaporList: ELaporRecord[];
+  spDamaiList: SPDamaiRecord[];
   onOpenMenu: () => void;
   isAdmin: boolean;
 }
@@ -40,6 +41,7 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
   guruList,
   siswaList,
   eLaporList,
+  spDamaiList,
   onOpenMenu,
   isAdmin,
 }) => {
@@ -59,42 +61,44 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
   const filteredKelas = kelasList.filter((k) => {
     const matchTingkat = selectedTingkat === 'Semua' || k.tingkat === selectedTingkat;
     const matchQuery =
-      k.kelas.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      k.waliKelas.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      k.dutaAntiBullying.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      k.catatan.toLowerCase().includes(searchQuery.toLowerCase());
+      (k.kelas || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (k.waliKelas || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (k.dutaAntiBullying || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (k.catatan || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchTingkat && matchQuery;
   });
 
-  // Calculate stats
+  // Calculate stats dynamically from real eLaporList and spDamaiList
   const totalSiswa = kelasList.reduce((acc, curr) => acc + curr.jumlahSiswa, 0) || 768;
   const zeroBullyingCount = kelasList.filter((k) => k.totalKasusTahunIni === 0).length || 22;
 
-  // Bullying types breakdown based on eLaporList / screenshot
-  const verbalCount = eLaporList.filter((e) => e.kategoriKasus === 'Verbal').length || 0;
-  const fisikCount = eLaporList.filter((e) => e.kategoriKasus === 'Sosial/Relasional').length || 3;
-  const siberCount = eLaporList.filter((e) => e.kategoriKasus === 'Siber').length || 1;
-  const sosialCount = eLaporList.filter((e) => e.kategoriKasus === 'Sosial/Relasional').length || 0;
-  const lainnyaCount = eLaporList.filter((e) => e.kategoriKasus === 'Lainnya').length || 0;
-  const totalInsiden = fisikCount + siberCount + verbalCount + sosialCount + lainnyaCount || 4;
-  const totalTuntas = 4;
+  const verbalCount = eLaporList.filter((e) => e.kategoriKasus === 'Verbal').length;
+  const fisikCount = eLaporList.filter((e) => e.kategoriKasus === 'Fisik' || e.kategoriKasus === 'Sosial/Relasional').length;
+  const siberCount = eLaporList.filter((e) => e.kategoriKasus === 'Siber').length;
+  const sosialCount = eLaporList.filter((e) => e.kategoriKasus === 'Sosial/Relasional').length;
+  const lainnyaCount = eLaporList.filter((e) => e.kategoriKasus === 'Lainnya').length;
+
+  const totalInsiden = Math.max(eLaporList.length, spDamaiList.length, fisikCount + siberCount + verbalCount + sosialCount + lainnyaCount, 1);
+  const totalTuntas = Math.max(spDamaiList.length, eLaporList.filter(e => e.status === 'Selesai' || e.status === 'Terpantau Aman').length, 0);
+
+  const sumCases = Math.max(totalInsiden, 1);
 
   const categories = [
-    { label: 'Verbal (Ejekan / Kata Kasar)', pct: Math.round(((verbalCount || 12) / (totalInsiden || 25)) * 100), count: verbalCount || 12, color: '#3b82f6', bgClass: 'bg-blue-500' },
-    { label: 'Fisik & Relasional', pct: Math.round(((fisikCount || 8) / (totalInsiden || 25)) * 100), count: fisikCount || 8, color: '#ef4444', bgClass: 'bg-rose-500' },
-    { label: 'Siber (Media Sosial / Chat)', pct: Math.round(((siberCount || 3) / (totalInsiden || 25)) * 100), count: siberCount || 3, color: '#10b981', bgClass: 'bg-emerald-500' },
-    { label: 'Sosial & Lainnya', pct: Math.round(((lainnyaCount || 2) / (totalInsiden || 25)) * 100), count: lainnyaCount || 2, color: '#f59e0b', bgClass: 'bg-amber-500' },
+    { label: 'Verbal (Ejekan / Kata Kasar)', pct: Math.round((verbalCount / sumCases) * 100), count: verbalCount, color: '#3b82f6', bgClass: 'bg-blue-500' },
+    { label: 'Fisik & Relasional', pct: Math.round((fisikCount / sumCases) * 100), count: fisikCount, color: '#ef4444', bgClass: 'bg-rose-500' },
+    { label: 'Siber (Media Sosial / Chat)', pct: Math.round((siberCount / sumCases) * 100), count: siberCount, color: '#10b981', bgClass: 'bg-emerald-500' },
+    { label: 'Sosial & Lainnya', pct: Math.round(((sosialCount + lainnyaCount) / sumCases) * 100), count: sosialCount + lainnyaCount, color: '#f59e0b', bgClass: 'bg-amber-500' },
   ];
 
-  // Rekapitulasi Komprehensif dataset matching Screenshot 1
+  // Rekapitulasi Komprehensif dataset computed from eLapor & SP Damai
   const rekapJenisList = [
     {
       id: 'fisik',
       shortLabel: 'Fisik',
       fullLabel: 'Fisik (Dorongan/Gesekan)',
-      cases: 3,
-      pct: 75,
-      resolved: 3,
+      cases: fisikCount,
+      pct: Math.round((fisikCount / sumCases) * 100),
+      resolved: Math.min(fisikCount, Math.round((totalTuntas * (fisikCount / sumCases)))),
       color: '#ef4444',
       dotColor: 'bg-rose-500',
       barColor: 'bg-rose-500',
@@ -103,9 +107,9 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       id: 'siber',
       shortLabel: 'Siber',
       fullLabel: 'Siber (Medsos/Grup Chat)',
-      cases: 1,
-      pct: 25,
-      resolved: 1,
+      cases: siberCount,
+      pct: Math.round((siberCount / sumCases) * 100),
+      resolved: Math.min(siberCount, Math.round((totalTuntas * (siberCount / sumCases)))),
       color: '#3b82f6',
       dotColor: 'bg-blue-500',
       barColor: 'bg-blue-500',
@@ -114,9 +118,9 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       id: 'verbal',
       shortLabel: 'Verbal',
       fullLabel: 'Verbal (Ejekan/Julukan/Hinaan)',
-      cases: 0,
-      pct: 0,
-      resolved: 0,
+      cases: verbalCount,
+      pct: Math.round((verbalCount / sumCases) * 100),
+      resolved: Math.min(verbalCount, Math.round((totalTuntas * (verbalCount / sumCases)))),
       color: '#f59e0b',
       dotColor: 'bg-amber-500',
       barColor: 'bg-amber-500',
@@ -125,9 +129,9 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       id: 'sosial',
       shortLabel: 'Sosial / Pengucilan',
       fullLabel: 'Sosial / Pengucilan',
-      cases: 0,
-      pct: 0,
-      resolved: 0,
+      cases: sosialCount,
+      pct: Math.round((sosialCount / sumCases) * 100),
+      resolved: Math.min(sosialCount, Math.round((totalTuntas * (sosialCount / sumCases)))),
       color: '#a855f7',
       dotColor: 'bg-purple-500',
       barColor: 'bg-purple-500',
@@ -136,12 +140,12 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
       id: 'lainnya',
       shortLabel: 'Lainnya / Pemalakan',
       fullLabel: 'Lainnya / Pemalakan',
-      cases: 0,
-      pct: 0,
-      resolved: 0,
-      color: '#64748b',
-      dotColor: 'bg-slate-500',
-      barColor: 'bg-slate-500',
+      cases: lainnyaCount,
+      pct: Math.round((lainnyaCount / sumCases) * 100),
+      resolved: Math.min(lainnyaCount, Math.round((totalTuntas * (lainnyaCount / sumCases)))),
+      color: '#10b981',
+      dotColor: 'bg-emerald-500',
+      barColor: 'bg-emerald-500',
     },
   ];
 
@@ -786,7 +790,7 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => setEditingKelas(k)}
+                    onClick={() => setEditingKelas({ ...k })}
                     className="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition-colors shadow-2xs cursor-pointer"
                   >
                     <Edit className="w-3 h-3 text-emerald-600" />
@@ -1069,10 +1073,10 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
         isOpen={isPrintModalOpen}
         onClose={() => setIsPrintModalOpen(false)}
         judulDokumen="REKAPITULASI STATUS ZONA HIJAU 24 ROMBEL"
-        namaPenandatangan="WIWIK ISMIATI, S.Pd"
+        namaPenandatangan="Wiwik Ismiati, S.Pd"
         jabatanPenandatangan="Koordinator TPPK / Guru BK"
         nipPenandatangan="19831116 200904 2 003"
-        namaKepalaSekolah="NUR FADILAH, S.Pd., M.Pd"
+        namaKepalaSekolah="Nur Fadilah, S.Pd,.M.Pd"
         nipKepalaSekolah="19860410 201001 2 030"
       >
         <div className="space-y-4 text-xs">

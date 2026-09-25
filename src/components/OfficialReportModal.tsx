@@ -22,17 +22,39 @@ export const OfficialReportModal: React.FC<OfficialReportModalProps> = ({
   isOpen,
   onClose,
   judulDokumen,
-  namaPenandatangan = 'WIWIK ISMIATI, S.Pd',
+  namaPenandatangan = 'Wiwik Ismiati, S.Pd',
   jabatanPenandatangan = 'Koordinator TPPK / Guru BK',
   nipPenandatangan = '19831116 200904 2 003',
   tandaTanganUrl = '',
-  namaKepalaSekolah = 'NUR FADILAH, S.Pd., M.Pd',
+  namaKepalaSekolah = 'Nur Fadilah, S.Pd,.M.Pd',
   nipKepalaSekolah = '19860410 201001 2 030',
   tandaTanganKepalaUrl = '',
   showKepalaSekolah = true,
   tanggalDokumen = 'Pasuruan, 24 September 2026',
   children,
 }) => {
+  const [selectedNama, setSelectedNama] = React.useState(() => {
+    const name = (namaPenandatangan || '').toLowerCase();
+    if (name.includes('eki')) return 'Eki Febriani, S.Pd';
+    return 'Wiwik Ismiati, S.Pd';
+  });
+  const [selectedNip, setSelectedNip] = React.useState(() => {
+    const name = (namaPenandatangan || '').toLowerCase();
+    if (name.includes('eki')) return '19940214 202221 2 014';
+    return nipPenandatangan || '19831116 200904 2 003';
+  });
+
+  React.useEffect(() => {
+    const name = (namaPenandatangan || '').toLowerCase();
+    if (name.includes('eki')) {
+      setSelectedNama('Eki Febriani, S.Pd');
+      setSelectedNip('19940214 202221 2 014');
+    } else {
+      setSelectedNama('Wiwik Ismiati, S.Pd');
+      setSelectedNip(nipPenandatangan || '19831116 200904 2 003');
+    }
+  }, [namaPenandatangan, nipPenandatangan]);
+
   if (!isOpen) return null;
 
   const handlePrint = () => {
@@ -50,17 +72,27 @@ export const OfficialReportModal: React.FC<OfficialReportModalProps> = ({
   <title>${judulDokumen} - SMPN 7 Pasuruan</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @page { size: A4 portrait; margin-top: 0.5cm; margin-bottom: 1cm; margin-left: 1.5cm; margin-right: 1.5cm; }
-    body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; color: #000; padding: 20px; }
-    @media print { .no-print { display: none !important; } }
+    @page { size: A4 portrait; margin: 10mm; }
+    body { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; color: #000; padding: 15px; }
+    .print-sheet { box-shadow: none !important; border: none !important; max-width: 100% !important; margin: 0 auto; background: #fff; }
+    @media print { 
+      .no-print { display: none !important; } 
+      body { padding: 0 !important; background: #fff !important; }
+      .print-sheet { box-shadow: none !important; border: none !important; }
+    }
   </style>
 </head>
-<body class="max-w-[760px] mx-auto">
-  <div class="no-print mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center justify-between">
-    <span class="text-sm font-semibold text-emerald-800">Dokumen Sahabat SPANJU Siap Cetak</span>
-    <button onclick="window.print()" class="px-4 py-1.5 bg-emerald-600 text-white rounded font-medium text-sm">Cetak Dokumen</button>
+<body class="max-w-[760px] mx-auto bg-slate-100 py-6">
+  <div class="no-print mb-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between shadow-sm">
+    <div class="flex items-center gap-2">
+      <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="text-sm font-bold text-emerald-900">Dokumen Sahabat SPANJU Siap Cetak (A4 Tanpa Bayangan)</span>
+    </div>
+    <button onclick="window.print()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow cursor-pointer transition-all">Cetak / Simpan PDF</button>
   </div>
-  ${reportContent}
+  <div class="print-sheet bg-white p-8 sm:p-12 rounded-xl shadow-md border border-slate-200">
+    ${reportContent}
+  </div>
 </body>
 </html>`;
 
@@ -68,7 +100,7 @@ export const OfficialReportModal: React.FC<OfficialReportModalProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${judulDokumen.replace(/[^a-zA-Z0-9]/g, '_')}.html`;
+    link.download = `${judulDokumen.replace(/[^a-zA-Z0-9]/g, '_')}_A4.html`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -110,6 +142,32 @@ export const OfficialReportModal: React.FC<OfficialReportModalProps> = ({
           </div>
         </div>
 
+        {/* Signer Selection Bar (No-print) */}
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs no-print">
+          <span className="font-bold text-blue-900 flex items-center gap-1.5">
+            <span>Pilih Koordinator TPPK / Guru BK:</span>
+          </span>
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedNama}
+              onChange={(e) => {
+                const val = e.target.value.toLowerCase();
+                if (val.includes('eki')) {
+                  setSelectedNama('Eki Febriani, S.Pd');
+                  setSelectedNip('19940214 202221 2 014');
+                } else {
+                  setSelectedNama('Wiwik Ismiati, S.Pd');
+                  setSelectedNip('19831116 200904 2 003');
+                }
+              }}
+              className="bg-white border border-blue-300 rounded-lg px-3 py-1 font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500 cursor-pointer"
+            >
+              <option value="Wiwik Ismiati, S.Pd">Wiwik Ismiati, S.Pd (NIP. 19831116 200904 2 003)</option>
+              <option value="Eki Febriani, S.Pd">Eki Febriani, S.Pd (NIP. 19940214 202221 2 014)</option>
+            </select>
+          </div>
+        </div>
+
         {/* Document Body simulating real A4 page */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 flex justify-center bg-slate-200/70">
           <div
@@ -146,10 +204,10 @@ export const OfficialReportModal: React.FC<OfficialReportModalProps> = ({
                       </div>
                     )}
                   </div>
-                  <div className="font-bold underline uppercase text-slate-900">
-                    {namaPenandatangan}
+                  <div className="font-bold underline text-slate-900">
+                    {selectedNama}
                   </div>
-                  <div className="text-[11px] text-slate-700">NIP. {nipPenandatangan}</div>
+                  <div className="text-[11px] text-slate-700">NIP. {selectedNip}</div>
                 </div>
 
                 {/* Right: Kepala Sekolah (UPPERCASE) */}
@@ -172,7 +230,7 @@ export const OfficialReportModal: React.FC<OfficialReportModalProps> = ({
                         </div>
                       )}
                     </div>
-                    <div className="font-bold underline uppercase text-slate-900">
+                    <div className="font-bold underline text-slate-900">
                       {namaKepalaSekolah}
                     </div>
                     <div className="text-[11px] text-slate-700">NIP. {nipKepalaSekolah}</div>

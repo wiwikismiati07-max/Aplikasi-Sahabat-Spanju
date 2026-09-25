@@ -158,7 +158,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
         <div style="text-align: center;">
           <p style="margin: 0; font-size: 11pt;">Koordinator TPPK / Guru BK,</p>
           <div style="height: 60px;"></div>
-          <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 11pt;">WIWIK ISMIATI, S.Pd</p>
+          <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 11pt;">Wiwik Ismiati, S.Pd</p>
           <p style="margin: 0; font-size: 10pt;">NIP. 19831116 200904 2 003</p>
         </div>
       `;
@@ -167,7 +167,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
         <div style="text-align: center;">
           <p style="margin: 0; font-size: 11pt;">Guru BK / Tim TPPK,</p>
           <div style="height: 60px;"></div>
-          <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 11pt;">EKI FEBRIANI, S.Pd</p>
+          <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 11pt;">Eki Febriani, S.Pd</p>
           <p style="margin: 0; font-size: 10pt;">NIP. 19940214 202221 2 014</p>
         </div>
       `;
@@ -176,8 +176,8 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
         <div style="text-align: center;">
           <p style="margin: 0; font-size: 11pt;">Tim TPPK / Guru BK,</p>
           <div style="height: 60px;"></div>
-          <p style="margin: 0; font-weight: bold; font-size: 10pt;">1. WIWIK ISMIATI, S.Pd (NIP. 19831116 200904 2 003)</p>
-          <p style="margin: 0; font-weight: bold; font-size: 10pt;">2. EKI FEBRIANI, S.Pd (NIP. 19940214 202221 2 014)</p>
+          <p style="margin: 0; font-weight: bold; font-size: 10pt;">1. Wiwik Ismiati, S.Pd (NIP. 19831116 200904 2 003)</p>
+          <p style="margin: 0; font-weight: bold; font-size: 10pt;">2. Eki Febriani, S.Pd (NIP. 19940214 202221 2 014)</p>
         </div>
       `;
     }
@@ -247,7 +247,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
               <p style="margin: 0; font-size: 11pt;">Mengetahui,</p>
               <p style="margin: 0; font-size: 11pt;">Kepala UPT SMP Negeri 7 Pasuruan,</p>
               <div style="height: 60px;"></div>
-              <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 11pt;">NUR FADILAH, S.Pd., M.Pd</p>
+              <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 11pt;">Nur Fadilah, S.Pd,.M.Pd</p>
               <p style="margin: 0; font-size: 10pt;">NIP. 19860410 201001 2 030</p>
             </td>
           </tr>
@@ -788,7 +788,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
                   className="text-emerald-600"
                 />
                 <div>
-                  <div className="font-bold text-slate-800">1. WIWIK ISMIATI, S.Pd</div>
+                  <div className="font-bold text-slate-800">1. Wiwik Ismiati, S.Pd</div>
                   <div className="text-[10px] text-slate-500">NIP. 19831116 200904 2 003 (Koordinator TPPK)</div>
                 </div>
               </label>
@@ -802,7 +802,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
                   className="text-emerald-600"
                 />
                 <div>
-                  <div className="font-bold text-slate-800">2. EKI FEBRIANI, S.Pd</div>
+                  <div className="font-bold text-slate-800">2. Eki Febriani, S.Pd</div>
                   <div className="text-[10px] text-slate-500">NIP. 19940214 202221 2 014 (Guru BK / Tim TPPK)</div>
                 </div>
               </label>
@@ -824,7 +824,7 @@ export const SurveiKepuasanSection: React.FC<SurveiKepuasanSectionProps> = ({
 
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600">
               Mengetahui Kepala UPT SMP Negeri 7 Pasuruan:
-              <div className="font-bold uppercase text-slate-900 mt-0.5">NUR FADILAH, S.Pd., M.Pd</div>
+              <div className="font-bold text-slate-900 mt-0.5">Nur Fadilah, S.Pd,.M.Pd</div>
               <div className="text-slate-500">NIP. 19860410 201001 2 030</div>
             </div>
 

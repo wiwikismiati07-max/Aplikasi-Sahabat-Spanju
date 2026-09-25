@@ -16,14 +16,7 @@ import {
 export const INITIAL_GURU: GuruMaster[] = [
   { id: 'guru-1', nip: '19831116 200904 2 003', nama: 'Wiwik Ismiati, S.Pd', jabatan: 'Koordinator TPPK / Guru BK', status: 'PNS' },
   { id: 'guru-2', nip: '19940214 202221 2 014', nama: 'Eki Febriani, S.Pd', jabatan: 'Guru BK / Tim TPPK', status: 'PPPK' },
-  { id: 'guru-3', nip: '19860410 201001 2 030', nama: 'Nur Fadilah, S.Pd., M.Pd', jabatan: 'Kepala UPT SMP Negeri 7 Pasuruan', status: 'PNS' },
-  { id: 'guru-4', nip: '19750512 200003 1 005', nama: 'Bambang Sutrisno, M.Pd', jabatan: 'Wali Kelas 7A / Guru IPA', status: 'PNS' },
-  { id: 'guru-5', nip: '19800817 200501 2 008', nama: 'Siti Rahmawati, S.Pd', jabatan: 'Wali Kelas 7B / Guru Bahasa Indonesia', status: 'PNS' },
-  { id: 'guru-6', nip: '19820320 200604 1 012', nama: 'Ahmad Fauzi, S.Pd', jabatan: 'Wali Kelas 7C / Guru PJOK', status: 'PNS' },
-  { id: 'guru-7', nip: '19851104 201001 2 018', nama: 'Dewi Lestari, S.Pd', jabatan: 'Wali Kelas 8A / Guru Matematika', status: 'PNS' },
-  { id: 'guru-8', nip: '19880115 201402 1 003', nama: 'Hadi Prasetyo, S.Pd', jabatan: 'Wali Kelas 8E / Guru IPS', status: 'PNS' },
-  { id: 'guru-9', nip: '19900624 201803 2 007', nama: 'Nurul Hidayati, S.Pd', jabatan: 'Wali Kelas 8F / Guru Seni Budaya', status: 'PNS' },
-  { id: 'guru-10', nip: '19790909 200312 1 004', nama: 'Tri Wibowo, S.Pd', jabatan: 'Wali Kelas 9A / Guru Bahasa Inggris', status: 'PNS' },
+  { id: 'guru-3', nip: '19860410 201001 2 030', nama: 'Nur Fadilah, S.Pd, M.Pd', jabatan: 'Kepala UPT SMP Negeri 7 Pasuruan', status: 'PNS' },
 ];
 
 export const INITIAL_SISWA: SiswaMaster[] = [

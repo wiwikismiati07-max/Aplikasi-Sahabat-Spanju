@@ -181,9 +181,17 @@ export async function saveTableRow(tableName: string, row: any): Promise<boolean
       dbRow[k.toLowerCase()] = v;
     }
 
-    const { error } = await supabase.from(tableName).upsert(dbRow, { onConflict: 'id' });
+    const conflictColumn = 'id';
+    if (tableName === 'kelas_zona') {
+      if (!dbRow.id && dbRow.kelas) {
+        dbRow.id = `kelas-${String(dbRow.kelas).toLowerCase().trim()}`;
+      }
+    }
+
+    const { error } = await supabase.from(tableName).upsert(dbRow, { onConflict: conflictColumn });
     if (error) {
       console.warn(`Supabase upsert error on ${tableName}:`, error.message);
+      return false;
     }
     return true;
   } catch (err) {
@@ -198,9 +206,11 @@ export async function bulkReplaceTableData(tableName: string, rows: any[]): Prom
     // 1. Cache to local storage immediately
     safeStorage.setItem(`spanju_${tableName}`, JSON.stringify(rows));
 
+    const conflictColumn = 'id';
+
     // 2. Delete all existing records in table (if accessible)
     try {
-      await supabase.from(tableName).delete().neq('id', '___NON_EXISTENT_ID___');
+      await supabase.from(tableName).delete().neq(conflictColumn, '___NON_EXISTENT_ID___');
     } catch {
       // ignore
     }
@@ -212,10 +222,15 @@ export async function bulkReplaceTableData(tableName: string, rows: any[]): Prom
         for (const [k, v] of Object.entries(row)) {
           dbRow[k.toLowerCase()] = v;
         }
+        if (tableName === 'kelas_zona') {
+          if (!dbRow.id && dbRow.kelas) {
+            dbRow.id = `kelas-${String(dbRow.kelas).toLowerCase().trim()}`;
+          }
+        }
         return dbRow;
       });
 
-      const { error } = await supabase.from(tableName).upsert(dbRows, { onConflict: 'id' });
+      const { error } = await supabase.from(tableName).upsert(dbRows, { onConflict: conflictColumn });
       if (error) {
         console.warn(`Supabase bulk replace error on ${tableName}:`, error.message);
       }

@@ -100,7 +100,7 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
         jabatan,
         maksudKunjungan,
         tandaTanganUrl,
-        penerimaTamu: 'NUR FADILAH, S.Pd., M.Pd',
+        penerimaTamu: 'Nur Fadilah, S.Pd,.M.Pd',
       });
     }
     resetForm();
@@ -378,7 +378,7 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
           namaPenandatangan={printingRecord.namaTamu}
           jabatanPenandatangan={printingRecord.jabatan || 'Tamu Kedinasan'}
           nipPenandatangan=""
-          namaKepalaSekolah="NUR FADILAH, S.Pd., M.Pd"
+          namaKepalaSekolah="Nur Fadilah, S.Pd,.M.Pd"
           nipKepalaSekolah="19860410 201001 2 030"
           tanggalDokumen={`Pasuruan, ${printingRecord.hariTanggal.split(',')[1] || printingRecord.hariTanggal}`}
         >

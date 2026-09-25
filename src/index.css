@@ -36,32 +36,30 @@
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* Official Print Standards (A4, 0.5cm top margin) */
+/* Official Print Standards (A4, A4 Portrait, No shadows/borders) */
 @page {
   size: A4 portrait;
-  margin-top: 0.5cm;
-  margin-bottom: 1cm;
-  margin-left: 1.5cm;
-  margin-right: 1.5cm;
+  margin: 10mm;
 }
 
 @media print {
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
-    font-size: 11pt !important;
+  body * {
+    visibility: hidden !important;
   }
-  .no-print, nav, aside, header, button, .modal-backdrop {
-    display: none !important;
+  #printable-official-report, #printable-official-report * {
+    visibility: visible !important;
   }
-  .print-only {
-    display: block !important;
-  }
-  .print-sheet {
+  #printable-official-report {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
 }

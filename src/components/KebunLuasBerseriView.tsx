@@ -134,7 +134,7 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
         rencanaTindakLanjut: rtlList,
         keterangan,
         tandaTanganUrl,
-        namaPenandatangan: 'WIWIK ISMIATI, S.Pd',
+        namaPenandatangan: 'Wiwik Ismiati, S.Pd',
         jabatanPenandatangan: 'Koordinator TPPK / Guru BK',
       });
     }
@@ -542,10 +542,10 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
           onClose={() => setPrintingRecord(null)}
           judulDokumen="NOTULEN & EVALUASI KEBUN LUAS BERSERI"
           tandaTanganUrl={printingRecord.tandaTanganUrl}
-          namaPenandatangan="WIWIK ISMIATI, S.Pd"
+          namaPenandatangan="Wiwik Ismiati, S.Pd"
           jabatanPenandatangan="Koordinator TPPK / Guru BK"
           nipPenandatangan="19831116 200904 2 003"
-          namaKepalaSekolah="NUR FADILAH, S.Pd., M.Pd"
+          namaKepalaSekolah="Nur Fadilah, S.Pd,.M.Pd"
           nipKepalaSekolah="19860410 201001 2 030"
           tanggalDokumen={`Pasuruan, ${printingRecord.hariTanggal.split(',')[1] || printingRecord.hariTanggal}`}
         >
