@@ -11,7 +11,12 @@ import {
   X,
 } from 'lucide-react';
 import { CeriRecord } from '../types';
-import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
+import {
+  CalendarDatePicker,
+  RealTimeTimePicker,
+  getTodayIndoDate,
+  getCurrentWibTime,
+} from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { OfficialReportModal } from './OfficialReportModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
@@ -39,8 +44,8 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
   const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
-  const [hariTanggal, setHariTanggal] = useState('Sabtu, 19 September 2026');
-  const [waktu, setWaktu] = useState('08.00 WIB');
+  const [hariTanggal, setHariTanggal] = useState(getTodayIndoDate());
+  const [waktu, setWaktu] = useState(getCurrentWibTime());
   const [hasilTemuanSatuMinggu, setHasilTemuanSatuMinggu] = useState('');
   const [evaluasiKegiatan, setEvaluasiKegiatan] = useState('');
   const [rencanaInovasi, setRencanaInovasi] = useState('');
@@ -53,8 +58,8 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
 
   const resetForm = () => {
     setEditingId(null);
-    setHariTanggal('Sabtu, 19 September 2026');
-    setWaktu('08.00 WIB');
+    setHariTanggal(getTodayIndoDate());
+    setWaktu(getCurrentWibTime());
     setHasilTemuanSatuMinggu('');
     setEvaluasiKegiatan('');
     setRencanaInovasi('');
@@ -184,11 +189,13 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
                   value={hariTanggal}
                   onChange={setHariTanggal}
                   label="Hari / Tanggal"
+                  isLocked={editingId !== null}
                 />
                 <RealTimeTimePicker
                   value={waktu}
                   onChange={setWaktu}
                   label="Waktu Sesi Ceri"
+                  isLocked={editingId !== null}
                 />
               </div>
 

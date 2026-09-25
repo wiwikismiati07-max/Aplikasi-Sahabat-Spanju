@@ -15,7 +15,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { SPDamaiRecord, SiswaMaster, UserProfile } from '../types';
-import { CalendarDatePicker } from './DateTimeWidgets';
+import { CalendarDatePicker, getTodayIndoDate } from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { StudentPickerModal } from './StudentPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
@@ -167,7 +167,7 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
 
   // Form Fields
   const [nomorSurat, setNomorSurat] = useState('421.3/088/SP-DAMAI/423.107.07/2026');
-  const [hariTanggal, setHariTanggal] = useState('Rabu, 23 September 2026');
+  const [hariTanggal, setHariTanggal] = useState(getTodayIndoDate());
   const [namaPihak1, setNamaPihak1] = useState('');
   const [kelasPihak1, setKelasPihak1] = useState('');
   const [namaPihak2, setNamaPihak2] = useState('');
@@ -191,7 +191,7 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
   const resetForm = () => {
     setEditingId(null);
     setNomorSurat(`421.3/${String(spDamaiList.length + 1).padStart(3, '0')}/SP-DAMAI/423.107.07/2026`);
-    setHariTanggal('Rabu, 23 September 2026');
+    setHariTanggal(getTodayIndoDate());
     setNamaPihak1('');
     setKelasPihak1('');
     setNamaPihak2('');
@@ -352,6 +352,7 @@ export const SPDamaiView: React.FC<SPDamaiViewProps> = ({
                   value={hariTanggal}
                   onChange={setHariTanggal}
                   label="Hari / Tanggal Kesepakatan"
+                  isLocked={editingId !== null}
                 />
               </div>
 

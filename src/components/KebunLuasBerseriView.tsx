@@ -12,7 +12,12 @@ import {
   ListPlus,
 } from 'lucide-react';
 import { KebunRecord, RTLItem } from '../types';
-import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
+import {
+  CalendarDatePicker,
+  RealTimeTimePicker,
+  getTodayIndoDate,
+  getCurrentWibTime,
+} from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { OfficialReportModal } from './OfficialReportModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
@@ -40,8 +45,8 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
   const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
-  const [hariTanggal, setHariTanggal] = useState('Kamis, 17 September 2026');
-  const [waktu, setWaktu] = useState('13.00 WIB');
+  const [hariTanggal, setHariTanggal] = useState(getTodayIndoDate());
+  const [waktu, setWaktu] = useState(getCurrentWibTime());
   const [evaluasiProgramTerlaksana, setEvaluasiProgramTerlaksana] = useState('');
   const [evaluasiKendalaSolusi, setEvaluasiKendalaSolusi] = useState('');
   const [hasilInovasi, setHasilInovasi] = useState('');
@@ -59,8 +64,8 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
 
   const resetForm = () => {
     setEditingId(null);
-    setHariTanggal('Kamis, 17 September 2026');
-    setWaktu('13.00 WIB');
+    setHariTanggal(getTodayIndoDate());
+    setWaktu(getCurrentWibTime());
     setEvaluasiProgramTerlaksana('');
     setEvaluasiKendalaSolusi('');
     setHasilInovasi('');
@@ -213,11 +218,13 @@ export const KebunLuasBerseriView: React.FC<KebunLuasBerseriViewProps> = ({
                   value={hariTanggal}
                   onChange={setHariTanggal}
                   label="Hari / Tanggal"
+                  isLocked={editingId !== null}
                 />
                 <RealTimeTimePicker
                   value={waktu}
                   onChange={setWaktu}
                   label="Waktu Pelaksanaan"
+                  isLocked={editingId !== null}
                 />
               </div>
 

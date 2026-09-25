@@ -16,7 +16,12 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { ELaporRecord, SiswaMaster, UserProfile } from '../types';
-import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
+import {
+  CalendarDatePicker,
+  RealTimeTimePicker,
+  getTodayIndoDate,
+  getCurrentWibTime,
+} from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { StudentPickerModal } from './StudentPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
@@ -166,8 +171,8 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
   const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
-  const [hariTanggal, setHariTanggal] = useState('Senin, 21 September 2026');
-  const [waktuKejadian, setWaktuKejadian] = useState('10.00 WIB');
+  const [hariTanggal, setHariTanggal] = useState(getTodayIndoDate());
+  const [waktuKejadian, setWaktuKejadian] = useState(getCurrentWibTime());
   const [namaSiswa, setNamaSiswa] = useState('');
   const [kelas, setKelas] = useState('7A');
   const [namaSiswa2, setNamaSiswa2] = useState('');
@@ -191,8 +196,8 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
 
   const resetForm = () => {
     setEditingId(null);
-    setHariTanggal('Senin, 21 September 2026');
-    setWaktuKejadian('10.00 WIB');
+    setHariTanggal(getTodayIndoDate());
+    setWaktuKejadian(getCurrentWibTime());
     setNamaSiswa('');
     setKelas('7A');
     setNamaSiswa2('');
@@ -357,11 +362,13 @@ export const ELaporView: React.FC<ELaporViewProps> = ({
                   value={hariTanggal}
                   onChange={setHariTanggal}
                   label="Hari / Tanggal Kejadian"
+                  isLocked={editingId !== null}
                 />
                 <RealTimeTimePicker
                   value={waktuKejadian}
                   onChange={setWaktuKejadian}
                   label="Waktu Kejadian"
+                  isLocked={editingId !== null}
                 />
               </div>
 

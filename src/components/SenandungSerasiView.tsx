@@ -13,7 +13,12 @@ import {
   Quote,
 } from 'lucide-react';
 import { SerasiRecord } from '../types';
-import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
+import {
+  CalendarDatePicker,
+  RealTimeTimePicker,
+  getTodayIndoDate,
+  getCurrentWibTime,
+} from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { OfficialReportModal } from './OfficialReportModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
@@ -41,8 +46,8 @@ export const SenandungSerasiView: React.FC<SenandungSerasiViewProps> = ({
   const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
-  const [hariTanggal, setHariTanggal] = useState('Selasa, 22 September 2026');
-  const [waktu, setWaktu] = useState('07.00 WIB');
+  const [hariTanggal, setHariTanggal] = useState(getTodayIndoDate());
+  const [waktu, setWaktu] = useState(getCurrentWibTime());
   const [isManualCategory, setIsManualCategory] = useState(false);
   const [kategoriLiterasi, setKategoriLiterasi] = useState('Karakter Ramah Kawan');
   const [pesanDisampaikan, setPesanDisampaikan] = useState('');
@@ -64,8 +69,8 @@ export const SenandungSerasiView: React.FC<SenandungSerasiViewProps> = ({
 
   const resetForm = () => {
     setEditingId(null);
-    setHariTanggal('Selasa, 22 September 2026');
-    setWaktu('07.00 WIB');
+    setHariTanggal(getTodayIndoDate());
+    setWaktu(getCurrentWibTime());
     setIsManualCategory(false);
     setKategoriLiterasi('Karakter Ramah Kawan');
     setPesanDisampaikan('');
@@ -200,11 +205,13 @@ export const SenandungSerasiView: React.FC<SenandungSerasiViewProps> = ({
                   value={hariTanggal}
                   onChange={setHariTanggal}
                   label="Hari / Tanggal Penyiaran"
+                  isLocked={editingId !== null}
                 />
                 <RealTimeTimePicker
                   value={waktu}
                   onChange={setWaktu}
                   label="Waktu Penyiaran"
+                  isLocked={editingId !== null}
                 />
               </div>
 

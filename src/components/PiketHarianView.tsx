@@ -15,7 +15,12 @@ import {
   Link2,
 } from 'lucide-react';
 import { PiketRecord, SiswaMaster } from '../types';
-import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
+import {
+  CalendarDatePicker,
+  RealTimeTimePicker,
+  getTodayIndoDate,
+  getCurrentWibTime,
+} from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { StudentPickerModal } from './StudentPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
@@ -46,8 +51,8 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
   const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
-  const [hariTanggal, setHariTanggal] = useState('Senin, 24 September 2026');
-  const [waktu, setWaktu] = useState('06.45 WIB');
+  const [hariTanggal, setHariTanggal] = useState(getTodayIndoDate());
+  const [waktu, setWaktu] = useState(getCurrentWibTime());
   const [namaAnggota, setNamaAnggota] = useState('');
   const [kelas, setKelas] = useState('');
   const [hasilTemuan, setHasilTemuan] = useState('');
@@ -62,8 +67,8 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
 
   const resetForm = () => {
     setEditingId(null);
-    setHariTanggal('Senin, 24 September 2026');
-    setWaktu('06.45 WIB');
+    setHariTanggal(getTodayIndoDate());
+    setWaktu(getCurrentWibTime());
     setNamaAnggota('');
     setKelas('');
     setHasilTemuan('');
@@ -265,11 +270,13 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                   value={hariTanggal}
                   onChange={setHariTanggal}
                   label="Hari / Tanggal"
+                  isLocked={editingId !== null}
                 />
                 <RealTimeTimePicker
                   value={waktu}
                   onChange={setWaktu}
                   label="Waktu Pelaksanaan"
+                  isLocked={editingId !== null}
                 />
               </div>
 

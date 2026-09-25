@@ -11,7 +11,12 @@ import {
   Building,
 } from 'lucide-react';
 import { BukuTamuRecord } from '../types';
-import { CalendarDatePicker, RealTimeTimePicker } from './DateTimeWidgets';
+import {
+  CalendarDatePicker,
+  RealTimeTimePicker,
+  getTodayIndoDate,
+  getCurrentWibTime,
+} from './DateTimeWidgets';
 import { TouchSignaturePad } from './TouchSignaturePad';
 import { OfficialReportModal } from './OfficialReportModal';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
@@ -39,8 +44,8 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
   const [deletingLabel, setDeletingLabel] = useState<string>('');
 
   // Form Fields
-  const [hariTanggal, setHariTanggal] = useState('Kamis, 24 September 2026');
-  const [waktu, setWaktu] = useState('09.15 WIB');
+  const [hariTanggal, setHariTanggal] = useState(getTodayIndoDate());
+  const [waktu, setWaktu] = useState(getCurrentWibTime());
   const [namaTamu, setNamaTamu] = useState('');
   const [asalInstansi, setAsalInstansi] = useState('');
   const [jabatan, setJabatan] = useState('');
@@ -52,8 +57,8 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
 
   const resetForm = () => {
     setEditingId(null);
-    setHariTanggal('Kamis, 24 September 2026');
-    setWaktu('09.15 WIB');
+    setHariTanggal(getTodayIndoDate());
+    setWaktu(getCurrentWibTime());
     setNamaTamu('');
     setAsalInstansi('');
     setJabatan('');
@@ -178,11 +183,13 @@ export const BukuTamuView: React.FC<BukuTamuViewProps> = ({
                   value={hariTanggal}
                   onChange={setHariTanggal}
                   label="Hari / Tanggal Kunjungan"
+                  isLocked={editingId !== null}
                 />
                 <RealTimeTimePicker
                   value={waktu}
                   onChange={setWaktu}
                   label="Waktu Kehadiran"
+                  isLocked={editingId !== null}
                 />
               </div>
 
