@@ -252,8 +252,8 @@ export const PilihanMenuAppView: React.FC<PilihanMenuAppViewProps> = ({
 
             {/* Subtitle */}
             <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed max-w-2xl">
-              Pilih modul atau inovasi di bawah ini dengan mengklik tombol{' '}
-              <strong className="text-slate-900 font-bold">Buka Aplikasi</strong> pada kartu yang diinginkan.
+              Pilih modul atau inovasi di bawah ini dengan mengklik{' '}
+              <strong className="text-slate-900 font-bold">icon aplikasi</strong> pada kartu yang diinginkan.
             </p>
           </div>
 
@@ -360,7 +360,7 @@ export const PilihanMenuAppView: React.FC<PilihanMenuAppViewProps> = ({
         </div>
       </div>
 
-      {/* SECTION 3: 3-COLUMN CARD GRID (MATCHES SCREENSHOT EXACTLY) */}
+      {/* SECTION 3: 3-COLUMN CARD GRID (CLICKABLE ICON, NO BOTTOM BUTTON) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
         {filteredCards.map((card) => {
           const Icon = card.icon;
@@ -369,39 +369,38 @@ export const PilihanMenuAppView: React.FC<PilihanMenuAppViewProps> = ({
               key={card.id}
               className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col items-center justify-between text-center group"
             >
-              {/* Center Squircle Icon with Floating Badge */}
+              {/* Center Squircle Icon Clickable */}
               <div className="relative mt-2 mb-4">
                 {card.badge && (
                   <span className="absolute -top-2.5 -right-4 z-10 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs whitespace-nowrap">
                     {card.badge}
                   </span>
                 )}
-                <div
-                  className={`w-20 h-20 sm:w-22 sm:h-22 rounded-3xl ${card.iconBg} text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-200`}
+                <button
+                  type="button"
+                  onClick={() => handleCardClick(card)}
+                  title="Buka Aplikasi"
+                  className={`w-20 h-20 sm:w-22 sm:h-22 rounded-3xl ${card.iconBg} text-white flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group/icon relative`}
                 >
                   <Icon className="w-9 h-9 sm:w-10 sm:h-10 text-white" />
-                </div>
+                  <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white text-slate-700 shadow-sm border border-slate-200 flex items-center justify-center opacity-0 group-hover/icon:opacity-100 transition-opacity">
+                    <ExternalLink className="w-3 h-3 text-blue-600" />
+                  </span>
+                </button>
               </div>
 
               {/* Title & Subtitle */}
-              <div className="w-full px-2">
-                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase leading-snug group-hover:text-blue-700 transition-colors">
+              <div className="w-full px-2 mb-2">
+                <h2 
+                  onClick={() => handleCardClick(card)}
+                  className="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase leading-snug hover:text-blue-700 cursor-pointer transition-colors"
+                >
                   {card.title}
                 </h2>
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1.5 min-h-[32px] flex items-center justify-center">
                   {card.subtitle}
                 </div>
               </div>
-
-              {/* Buka Aplikasi Button */}
-              <button
-                type="button"
-                onClick={() => handleCardClick(card)}
-                className="w-full mt-5 py-2.5 px-4 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 text-slate-700 border border-slate-200/90 rounded-2xl text-xs sm:text-sm font-bold shadow-2xs transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Buka Aplikasi</span>
-                <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
-              </button>
             </div>
           );
         })}
