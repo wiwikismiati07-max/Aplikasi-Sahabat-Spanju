@@ -32,6 +32,7 @@ import {
 } from './types';
 import {
   initialKelasZona,
+  ensureAll24Kelas,
   initialPiket,
   initialCeri,
   initialKebun,
@@ -92,10 +93,7 @@ export default function App() {
   const [kelasList, setKelasList] = useState<KelasZona[]>(() => {
     const saved = localStorage.getItem('spanju_kelas_v1');
     const raw = saved ? JSON.parse(saved) : initialKelasZona;
-    return raw.map((k: any) => ({
-      ...k,
-      id: k.id || `kelas-${String(k.kelas || '').toLowerCase().trim()}`
-    }));
+    return ensureAll24Kelas(raw);
   });
 
   const [piketList, setPiketList] = useState<PiketRecord[]>(() => {
@@ -225,14 +223,20 @@ export default function App() {
       try {
         const cloudKelas = await fetchTableData<KelasZona>('kelas_zona');
         if (cloudKelas && cloudKelas.length > 0) {
-          const mapped = cloudKelas.map((k: any) => ({
-            ...k,
-            id: k.id || `kelas-${String(k.kelas || '').toLowerCase().trim()}`
-          }));
-          setKelasList(mapped);
-          localStorage.setItem('spanju_kelas_v1', JSON.stringify(mapped));
+          const merged = ensureAll24Kelas(cloudKelas);
+          setKelasList(merged);
+          localStorage.setItem('spanju_kelas_v1', JSON.stringify(merged));
+          if (cloudKelas.length < 24) {
+            bulkReplaceTableData('kelas_zona', merged);
+          }
         } else if (kelasList.length > 0) {
-          bulkReplaceTableData('kelas_zona', kelasList);
+          const merged = ensureAll24Kelas(kelasList);
+          setKelasList(merged);
+          bulkReplaceTableData('kelas_zona', merged);
+        } else {
+          const merged = ensureAll24Kelas(initialKelasZona);
+          setKelasList(merged);
+          bulkReplaceTableData('kelas_zona', merged);
         }
 
         const cloudPiket = await fetchTableData<PiketRecord>('piket_harian');
@@ -332,10 +336,11 @@ export default function App() {
     const cleanName = String(kelasName || '').trim();
     setKelasList((prev) => {
       const next = prev.map((k) => (String(k.kelas || '').trim().toLowerCase() === cleanName.toLowerCase() ? { ...k, ...updated } : k));
-      localStorage.setItem('spanju_kelas_v1', JSON.stringify(next));
-      const updatedItem = next.find((k) => String(k.kelas || '').trim().toLowerCase() === cleanName.toLowerCase());
+      const full24 = ensureAll24Kelas(next);
+      localStorage.setItem('spanju_kelas_v1', JSON.stringify(full24));
+      const updatedItem = full24.find((k) => String(k.kelas || '').trim().toLowerCase() === cleanName.toLowerCase());
       if (updatedItem) saveTableData('kelas_zona', updatedItem);
-      return next;
+      return full24;
     });
   };
 

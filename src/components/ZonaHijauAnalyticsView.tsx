@@ -20,6 +20,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import { KelasZona, GuruMaster, SiswaMaster, ELaporRecord, SPDamaiRecord } from '../types';
+import { ensureAll24Kelas } from '../data/initialData';
 import { StudentPickerModal } from './StudentPickerModal';
 import { TeacherPickerModal } from './TeacherPickerModal';
 import { OfficialReportModal } from './OfficialReportModal';
@@ -57,8 +58,11 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
   // Print Modal
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
 
+  // Ensure all 24 classes are always present even if prop contains truncated data
+  const safeKelasList = ensureAll24Kelas(kelasList);
+
   // Filtered classes
-  const filteredKelas = kelasList.filter((k) => {
+  const filteredKelas = safeKelasList.filter((k) => {
     const matchTingkat = selectedTingkat === 'Semua' || k.tingkat === selectedTingkat;
     const matchQuery =
       (k.kelas || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -69,8 +73,8 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
   });
 
   // Calculate stats dynamically from real eLaporList and spDamaiList
-  const totalSiswa = kelasList.reduce((acc, curr) => acc + curr.jumlahSiswa, 0) || 768;
-  const zeroBullyingCount = kelasList.filter((k) => k.totalKasusTahunIni === 0).length || 22;
+  const totalSiswa = safeKelasList.reduce((acc, curr) => acc + curr.jumlahSiswa, 0) || 768;
+  const zeroBullyingCount = safeKelasList.filter((k) => k.totalKasusTahunIni === 0).length || 22;
 
   const verbalCount = eLaporList.filter((e) => e.kategoriKasus === 'Verbal').length;
   const fisikCount = eLaporList.filter((e) => e.kategoriKasus === 'Fisik' || e.kategoriKasus === 'Sosial/Relasional').length;
@@ -847,7 +851,7 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {kelasList.map((row) => {
+              {safeKelasList.map((row) => {
                 const hasCases = row.totalKasusTahunIni > 0;
                 return (
                   <tr key={row.kelas} className="hover:bg-emerald-50/30 transition-colors">
@@ -1097,7 +1101,7 @@ export const ZonaHijauAnalyticsView: React.FC<ZonaHijauAnalyticsViewProps> = ({
               </tr>
             </thead>
             <tbody>
-              {kelasList.map((k, idx) => (
+              {safeKelasList.map((k, idx) => (
                 <tr key={k.kelas} className="border border-slate-300">
                   <td className="border border-slate-300 p-1.5 text-center">{idx + 1}</td>
                   <td className="border border-slate-300 p-1.5 font-bold">{k.kelas}</td>

@@ -249,6 +249,35 @@ export const INITIAL_SURVEI: SurveiKepuasanRecord[] = [
 
 // Export convenient aliases
 export const initialKelasZona = INITIAL_KELAS_ZONA;
+
+export const ensureAll24Kelas = (list?: any[]): any[] => {
+  const existingMap = new Map<string, any>();
+  if (Array.isArray(list)) {
+    list.forEach((k) => {
+      if (k && k.kelas) {
+        existingMap.set(String(k.kelas).trim().toUpperCase(), k);
+      }
+    });
+  }
+
+  return INITIAL_KELAS_ZONA.map((def) => {
+    const key = String(def.kelas).trim().toUpperCase();
+    const existing = existingMap.get(key);
+    const item = existing ? { ...def, ...existing } : { ...def };
+    return {
+      ...item,
+      id: item.id || `kelas-${key.toLowerCase()}`,
+      tingkat: item.tingkat || def.tingkat,
+      jumlahSiswa: typeof item.jumlahSiswa === 'number' ? item.jumlahSiswa : def.jumlahSiswa,
+      skorKeramahan: typeof item.skorKeramahan === 'number' ? item.skorKeramahan : def.skorKeramahan,
+      waliKelas: item.waliKelas || def.waliKelas,
+      dutaAntiBullying: item.dutaAntiBullying || def.dutaAntiBullying,
+      catatan: item.catatan || def.catatan,
+      statusZona: item.statusZona || def.statusZona,
+    };
+  });
+};
+
 export const initialPiket = INITIAL_PIKET_HARIAN;
 export const initialCeri = INITIAL_CERI;
 export const initialKebun = INITIAL_KEBUN;
