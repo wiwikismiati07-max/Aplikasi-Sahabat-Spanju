@@ -46,10 +46,11 @@
   body * {
     visibility: hidden !important;
   }
-  #printable-official-report, #printable-official-report * {
+  #printable-official-report, #printable-official-report *,
+  #printable-infografis-report, #printable-infografis-report * {
     visibility: visible !important;
   }
-  #printable-official-report {
+  #printable-official-report, #printable-infografis-report {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
