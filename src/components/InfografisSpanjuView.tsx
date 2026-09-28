@@ -201,7 +201,7 @@ export const InfografisSpanjuView: React.FC<InfografisSpanjuViewProps> = ({
         </p>
 
         {/* Infografis Image Card Container */}
-        <div className="w-full max-w-3xl bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-transform mb-5">
+        <div className="w-full max-w-3xl bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden transition-transform mb-4">
           <div
             style={{
               transform: `scale(${zoomLevel})`,
@@ -217,54 +217,6 @@ export const InfografisSpanjuView: React.FC<InfografisSpanjuViewProps> = ({
               crossOrigin="anonymous"
             />
           </div>
-        </div>
-
-        {/* Dedicated Quick Action Toolbar Below Infografis */}
-        <div className="w-full max-w-3xl flex flex-wrap items-center justify-between gap-3 bg-white/95 backdrop-blur-xs p-4 rounded-2xl border border-emerald-200 shadow-md mb-3">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <div>
-              <span className="text-xs font-bold text-slate-800 block">
-                Dokumen Infografis Resmi
-              </span>
-              <span className="text-[11px] text-slate-500 block">
-                Bisa dicetak (Kertas A4 / PDF) &amp; disimpan ke galeri perangkat
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Cetak Infografis</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleDownloadImage}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              <span>Simpan Gambar</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Action bar below Infografis */}
-        <div className="w-full max-w-3xl flex flex-wrap items-center justify-center gap-3 py-2 text-center text-xs text-slate-500">
-          <span>Format file: JPG Resolusi Tinggi</span>
-          <span>•</span>
-          <span>Dukungan Cetak: Kertas A4 Portrait / PDF</span>
-          <span>•</span>
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer"
-          >
-            Klik di sini untuk langsung mencetak
-          </button>
         </div>
       </div>
 
