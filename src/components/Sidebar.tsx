@@ -42,6 +42,7 @@ interface SidebarProps {
   onImportBackup?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  variant?: 'default' | 'inline';
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -56,6 +57,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onImportBackup,
   isOpenMobile = false,
   onCloseMobile,
+  variant = 'default',
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -192,10 +194,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ];
 
+  const SidebarWrapper = variant === 'inline' ? 'div' : 'aside';
+  const wrapperClass = variant === 'inline'
+    ? 'w-full h-full flex flex-col bg-white overflow-hidden'
+    : `fixed md:sticky top-0 left-0 z-40 h-screen w-76 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out ${
+        isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`;
+
   return (
     <>
       {/* Mobile Backdrop */}
-      {isOpenMobile && (
+      {variant !== 'inline' && isOpenMobile && (
         <div
           onClick={onCloseMobile}
           className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs md:hidden"
@@ -203,11 +212,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Sidebar Container */}
-      <aside
-        className={`fixed md:sticky top-0 left-0 z-40 h-screen w-76 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-in-out ${
-          isOpenMobile ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-      >
+      <SidebarWrapper className={wrapperClass}>
         {/* Top Branding matching screenshot */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -413,7 +418,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             SMPN 7 Pasuruan &bull; E-Governance Sekolah Ramah
           </div>
         </div>
-      </aside>
+      </SidebarWrapper>
     </>
   );
 };

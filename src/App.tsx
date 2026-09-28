@@ -217,6 +217,72 @@ export default function App() {
     localStorage.setItem('spanju_survei_v1', JSON.stringify(surveiList));
   }, [surveiList]);
 
+  const handleExportBackup = () => {
+    const backupData: Record<string, string> = {};
+    const keys = [
+      'spanju_kelas_v1',
+      'spanju_piket_v1',
+      'spanju_ceri_v1',
+      'spanju_kebun_v1',
+      'spanju_serasi_v1',
+      'spanju_elapor_v1',
+      'spanju_spdamai_v1',
+      'spanju_tamu_v1',
+      'spanju_siswa_v1',
+      'spanju_guru_v1',
+      'spanju_media_v1',
+      'spanju_survei_v1',
+    ];
+    keys.forEach((key) => {
+      const val = localStorage.getItem(key);
+      if (val) backupData[key] = val;
+    });
+
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `backup_sahabat_spanju_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportBackup = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        if (typeof json !== 'object' || json === null) {
+          alert('Format backup tidak valid!');
+          return;
+        }
+
+        let importedCount = 0;
+        Object.entries(json).forEach(([key, val]) => {
+          if (key.startsWith('spanju_') && typeof val === 'string') {
+            localStorage.setItem(key, val);
+            importedCount++;
+          }
+        });
+
+        if (importedCount > 0) {
+          alert(`Berhasil mengimpor ${importedCount} kategori data! Aplikasi akan memuat ulang.`);
+          window.location.reload();
+        } else {
+          alert('Tidak ada data Sahabat SPANJU yang valid ditemukan di dalam file.');
+        }
+      } catch (err) {
+        alert('Gagal membaca file backup JSON: ' + (err as Error).message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
   // Try loading cloud data from Supabase asynchronously on initial mount & periodic multi-user sync
   useEffect(() => {
     async function loadCloudData() {
@@ -735,6 +801,8 @@ export default function App() {
                 setActiveTab('menu_utama');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
+              onExportBackup={handleExportBackup}
+              onImportBackup={handleImportBackup}
             />
           </div>
         </div>
@@ -746,48 +814,29 @@ export default function App() {
               className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
               onClick={() => setIsSidebarOpen(false)}
             />
-            <div className="relative w-80 max-w-full bg-white h-full shadow-2xl z-10 flex flex-col p-4 animate-in slide-in-from-left duration-200">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
-                    7
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black text-slate-900 uppercase">
-                      Sahabat SPANJU
-                    </h3>
-                    <p className="text-[10px] text-slate-500">SMPN 7 Pasuruan</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto">
-                <Sidebar
-                  activeTab={activeTab}
-                  onSelectTab={(tab: ActiveTab) => {
-                    setActiveTab(tab);
-                    setIsSidebarOpen(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  currentUser={currentUser}
-                  onOpenLogin={() => {
-                    setIsSidebarOpen(false);
-                    setIsLoginModalOpen(true);
-                  }}
-                  onOpenMenuModal={() => {
-                    setIsSidebarOpen(false);
-                    setActiveTab('menu_utama');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                />
-              </div>
+            <div className="relative w-80 max-w-[85vw] bg-white h-full shadow-2xl z-10 flex flex-col overflow-hidden animate-in slide-in-from-left duration-200">
+              <Sidebar
+                variant="inline"
+                activeTab={activeTab}
+                onSelectTab={(tab: ActiveTab) => {
+                  setActiveTab(tab);
+                  setIsSidebarOpen(false);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                currentUser={currentUser}
+                onCloseMobile={() => setIsSidebarOpen(false)}
+                onOpenLogin={() => {
+                  setIsSidebarOpen(false);
+                  setIsLoginModalOpen(true);
+                }}
+                onOpenMenuModal={() => {
+                  setIsSidebarOpen(false);
+                  setActiveTab('menu_utama');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                onExportBackup={handleExportBackup}
+                onImportBackup={handleImportBackup}
+              />
             </div>
           </div>
         )}
