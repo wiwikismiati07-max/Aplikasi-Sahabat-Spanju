@@ -16,6 +16,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { KopSurat } from './KopSurat';
+import { LOGO_PASS_TEMENAN_DATA_URL } from '../data/logoData';
 
 interface InfografisSpanjuViewProps {
   onOpenMenu: () => void;
@@ -35,8 +36,7 @@ export const InfografisSpanjuView: React.FC<InfografisSpanjuViewProps> = ({
   const toggleFullscreen = () => setIsFullscreen((prev) => !prev);
 
   const infografisImgUrl = '/infografis-sahabat-spanju.jpg';
-  const logoPassTemenan =
-    'https://i.ibb.co.com/pBbfS44d/LOGO-PASS-TEMENAN.jpg';
+  const logoPassTemenan = LOGO_PASS_TEMENAN_DATA_URL;
 
   const handlePrint = () => {
     window.print();

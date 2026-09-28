@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LOGO_PASS_TEMENAN_DATA_URL } from '../data/logoData';
 import { ShieldCheck, LogIn, BookOpen, PhoneCall, GraduationCap, Users, UserCheck, Eye, EyeOff, Sparkles, Image as ImageIcon, X } from 'lucide-react';
 import { UserProfile, UserRole } from '../types';
 
@@ -76,10 +77,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           <div className="relative mb-3">
             <div className="w-20 h-20 rounded-2xl p-1 bg-gradient-to-tr from-emerald-500 to-teal-400 shadow-xl shadow-emerald-500/25 flex items-center justify-center">
               <img
-                src="https://i.ibb.co.com/pBbfS44d/LOGO-PASS-TEMENAN.jpg"
+                src={LOGO_PASS_TEMENAN_DATA_URL}
+                onError={(e) => {
+                  e.currentTarget.src = '/logo-pass-temenan.jpg';
+                }}
                 alt="Logo PASS TEMENAN"
                 className="w-full h-full object-cover rounded-xl"
-                crossOrigin="anonymous"
               />
             </div>
           </div>

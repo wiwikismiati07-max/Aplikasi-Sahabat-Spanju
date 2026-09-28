@@ -13,6 +13,8 @@ import {
   Layers,
   Sparkles,
   Link2,
+  Users,
+  UserCheck,
 } from 'lucide-react';
 import { PiketRecord, SiswaMaster } from '../types';
 import {
@@ -61,9 +63,56 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
   const [tandaTanganUrl, setTandaTanganUrl] = useState('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
+  // Multi-Student Selection State
+  const [selectedStudents, setSelectedStudents] = useState<SiswaMaster[]>([]);
+  const [manualMembers, setManualMembers] = useState<string[]>([]);
+  const [customManualInput, setCustomManualInput] = useState<string>('');
+
   // Picker & Print Modals
   const [isStudentPickerOpen, setIsStudentPickerOpen] = useState(false);
   const [printingRecord, setPrintingRecord] = useState<PiketRecord | null>(null);
+
+  const syncAnggotaAndKelas = (students: SiswaMaster[], manuals: string[]) => {
+    const studentFormatted = students.map((s) => `${s.nama} (${s.kelas})`);
+    const allNames = [...studentFormatted, ...manuals];
+    const combinedNama = allNames.join(' & ');
+    setNamaAnggota(combinedNama);
+
+    // Combine unique classes
+    const uniqueClasses = Array.from(new Set(students.map((s) => s.kelas))).filter(Boolean).sort();
+    if (uniqueClasses.length > 0) {
+      const classStr = uniqueClasses.join(', ');
+      setKelas(`Kelas ${classStr}`);
+    }
+  };
+
+  const handleSelectStudentsMultiple = (siswaListSelected: SiswaMaster[]) => {
+    setSelectedStudents(siswaListSelected);
+    syncAnggotaAndKelas(siswaListSelected, manualMembers);
+  };
+
+  const handleAddManualMember = () => {
+    const trimmed = customManualInput.trim();
+    if (!trimmed) return;
+    if (!manualMembers.includes(trimmed)) {
+      const updatedManuals = [...manualMembers, trimmed];
+      setManualMembers(updatedManuals);
+      syncAnggotaAndKelas(selectedStudents, updatedManuals);
+    }
+    setCustomManualInput('');
+  };
+
+  const handleRemoveStudent = (studentId: string) => {
+    const updated = selectedStudents.filter((s) => s.id !== studentId);
+    setSelectedStudents(updated);
+    syncAnggotaAndKelas(updated, manualMembers);
+  };
+
+  const handleRemoveManualMember = (name: string) => {
+    const updated = manualMembers.filter((m) => m !== name);
+    setManualMembers(updated);
+    syncAnggotaAndKelas(selectedStudents, updated);
+  };
 
   const resetForm = () => {
     setEditingId(null);
@@ -75,6 +124,9 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
     setLinkFoto('');
     setKeterangan('');
     setTandaTanganUrl('');
+    setSelectedStudents([]);
+    setManualMembers([]);
+    setCustomManualInput('');
     setIsFormOpen(false);
   };
 
@@ -88,6 +140,16 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
     setLinkFoto(record.linkFoto);
     setKeterangan(record.keterangan);
     setTandaTanganUrl(record.tandaTanganUrl || '');
+
+    // Attempt matching names in record.namaAnggota with master siswaList
+    if (siswaList && siswaList.length > 0 && record.namaAnggota) {
+      const matched = siswaList.filter((s) => record.namaAnggota.includes(s.nama));
+      setSelectedStudents(matched);
+    } else {
+      setSelectedStudents([]);
+    }
+    setManualMembers([]);
+    setCustomManualInput('');
     setIsFormOpen(true);
   };
 
@@ -280,27 +342,108 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                 />
               </div>
 
-              {/* Nama Anggota Harian (Student Picker) */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Nama Anggota Harian
-                </label>
-                <div className="flex gap-2">
+              {/* Nama Anggota Harian (Multi-User / Multi-Class) */}
+              <div className="space-y-2 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="w-4 h-4 text-sky-600" />
+                    Nama Anggota Harian (Multi Siswa / Multi Kelas)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsStudentPickerOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                  >
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>Pilih Siswa Master Data</span>
+                  </button>
+                </div>
+
+                {/* Badges container for selected students */}
+                <div className="min-h-[46px] p-2 bg-white border border-slate-200 rounded-xl flex flex-wrap gap-1.5 items-center">
+                  {selectedStudents.length === 0 && manualMembers.length === 0 && !namaAnggota ? (
+                    <span className="text-xs text-slate-400 italic px-1">
+                      Belum ada anggota dipilih. Klik "Pilih Siswa Master Data" di atas atau ketik manual.
+                    </span>
+                  ) : null}
+
+                  {/* Selected Student Badges */}
+                  {selectedStudents.map((siswa) => (
+                    <span
+                      key={siswa.id}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-sky-100/90 text-sky-900 border border-sky-300 rounded-lg text-xs font-bold shadow-2xs"
+                    >
+                      <span>👤 {siswa.nama}</span>
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-sky-200/80 text-sky-950 rounded">
+                        {siswa.kelas}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStudent(siswa.id)}
+                        className="hover:text-rose-600 p-0.5 rounded cursor-pointer"
+                        title="Hapus anggota"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+
+                  {/* Manual Member Badges */}
+                  {manualMembers.map((name) => (
+                    <span
+                      key={name}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-100/90 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold shadow-2xs"
+                    >
+                      <span>✏️ {name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveManualMember(name)}
+                        className="hover:text-rose-600 p-0.5 rounded cursor-pointer"
+                        title="Hapus nama manual"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+
+                {/* Manual input row */}
+                <div className="flex gap-2 items-center pt-1">
+                  <input
+                    type="text"
+                    value={customManualInput}
+                    onChange={(e) => setCustomManualInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddManualMember();
+                      }
+                    }}
+                    placeholder="Ketik nama anggota tambahan lalu tekan Enter..."
+                    className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-slate-800"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddManualMember}
+                    className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    + Tambah
+                  </button>
+                </div>
+
+                {/* Raw combined text input preview */}
+                <div className="pt-1">
+                  <label className="block text-[11px] font-semibold text-slate-500 mb-0.5">
+                    Pratinjau Teks Lengkap Anggota Harian (Tersimpan):
+                  </label>
                   <input
                     type="text"
                     required
                     value={namaAnggota}
                     onChange={(e) => setNamaAnggota(e.target.value)}
-                    placeholder="Pilih dari Master Siswa atau ketik manual..."
-                    className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-slate-800"
+                    placeholder="Aditya Pratama (7A) & Cantika Dewi (7C)"
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-slate-900 font-medium"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setIsStudentPickerOpen(true)}
-                    className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-xs whitespace-nowrap"
-                  >
-                    Pilih Siswa
-                  </button>
                 </div>
               </div>
 
@@ -424,15 +567,19 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
         </div>
       )}
 
-      {/* Student Picker Modal */}
+      {/* Student Picker Modal (Multi-Select Support) */}
       <StudentPickerModal
         isOpen={isStudentPickerOpen}
         onClose={() => setIsStudentPickerOpen(false)}
         siswaList={siswaList}
-        title="Pilih Siswa untuk Anggota Piket Harian"
+        multiSelect={true}
+        initialSelectedIds={selectedStudents.map((s) => s.id)}
+        title="Pilih Anggota Piket Harian (Multi Siswa / Multi Kelas)"
+        onSelectMultiple={handleSelectStudentsMultiple}
         onSelect={(s) => {
-          setNamaAnggota(s.nama);
-          setKelas(`Kelas ${s.kelas}`);
+          if (selectedStudents.length === 0) {
+            handleSelectStudentsMultiple([s]);
+          }
         }}
       />
 

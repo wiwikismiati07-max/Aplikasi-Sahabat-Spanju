@@ -1,4 +1,5 @@
 import React from 'react';
+import { LOGO_DINAS_DATA_URL, LOGO_SMPN7_DATA_URL } from '../data/logoData';
 
 interface KopSuratProps {
   judulDokumen?: string;
@@ -13,10 +14,12 @@ export const KopSurat: React.FC<KopSuratProps> = ({ judulDokumen, className = ''
         {/* Left Logo: Dinas Kota Pasuruan */}
         <div className="flex-shrink-0">
           <img
-            src="https://i.ibb.co.com/C3Y7JXkN/logo-dinas.png"
+            src={LOGO_DINAS_DATA_URL}
+            onError={(e) => {
+              e.currentTarget.src = 'https://i.ibb.co/C3Y7JXkN/logo-dinas.png';
+            }}
             alt="Logo Pemerintah Kota Pasuruan"
             className="h-16 w-auto object-contain max-w-[65px]"
-            crossOrigin="anonymous"
           />
         </div>
 
@@ -45,13 +48,12 @@ export const KopSurat: React.FC<KopSuratProps> = ({ judulDokumen, className = ''
         {/* Right Logo: SMPN 7 Pasuruan */}
         <div className="flex-shrink-0">
           <img
-            src="/logo-smpn7.png"
+            src={LOGO_SMPN7_DATA_URL}
             onError={(e) => {
-              e.currentTarget.src = 'https://iili.io/KDFk4fI.png';
+              e.currentTarget.src = '/logo-smpn7.png';
             }}
             alt="Logo SMPN 7 Pasuruan"
             className="h-16 w-auto object-contain max-w-[65px]"
-            crossOrigin="anonymous"
           />
         </div>
       </div>

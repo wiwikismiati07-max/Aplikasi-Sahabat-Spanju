@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { LOGO_PASS_TEMENAN_DATA_URL } from '../data/logoData';
 import {
   LayoutGrid,
   ShieldCheck,
@@ -212,10 +213,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl p-0.5 border border-emerald-200 shadow-sm flex items-center justify-center flex-shrink-0 overflow-hidden bg-white">
               <img
-                src="https://i.ibb.co.com/pBbfS44d/LOGO-PASS-TEMENAN.jpg"
+                src={LOGO_PASS_TEMENAN_DATA_URL}
+                onError={(e) => {
+                  e.currentTarget.src = '/logo-pass-temenan.jpg';
+                }}
                 alt="Logo PASS TEMENAN"
                 className="w-full h-full object-cover rounded-xl"
-                crossOrigin="anonymous"
               />
             </div>
             <div>

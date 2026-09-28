@@ -92,7 +92,7 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
   label = 'Hari / Tanggal',
   isLocked = false,
 }) => {
-  // If not locked and value is empty or not provided, initialize to today's date
+  // If not locked and value is empty, initialize to today's date once
   useEffect(() => {
     if (!isLocked && !value) {
       onChange(getTodayIndoDate());
@@ -152,13 +152,13 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
         {isLocked ? (
           <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1">
             <Lock className="w-2.5 h-2.5 text-emerald-600" />
-            Terkunci (Tersimpan)
+            Terkunci (Data Tersimpan)
           </span>
         ) : (
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" />
-              Live Real-Time (Hari Ini)
+              Live Real-Time
             </span>
             <button
               type="button"
@@ -179,7 +179,7 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
           value={isoDate}
           onChange={handleDateChange}
           className={`w-full px-3 py-2 text-sm bg-white border rounded-xl shadow-xs focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-medium ${
-            isLocked ? 'border-slate-300 text-slate-800' : 'border-emerald-400 ring-1 ring-emerald-200 text-slate-900'
+            isLocked ? 'border-slate-300 text-slate-800 bg-slate-50/80' : 'border-emerald-400 ring-1 ring-emerald-200 text-slate-900'
           }`}
         />
       </div>
@@ -192,7 +192,7 @@ export const CalendarDatePicker: React.FC<CalendarDatePickerProps> = ({
           </span>
         )}
         <span className="text-[10px] text-slate-400 italic">
-          {isLocked ? 'Terkunci sesuai tanggal kejadian' : 'Real-time (otomatis terkunci setelah disimpan)'}
+          {isLocked ? 'Terkunci permanen sesuai tanggal tersimpan' : 'Otomatis terkunci setelah data disimpan'}
         </span>
       </div>
     </div>
@@ -203,7 +203,7 @@ export interface RealTimeTimePickerProps {
   value: string;
   onChange: (timeStr: string) => void;
   label?: string;
-  isLocked?: boolean; // false = input baru (real-time jam bergerak), true = setelah disimpan (terkunci)
+  isLocked?: boolean; // false = input baru, true = setelah disimpan (terkunci)
 }
 
 export const RealTimeTimePicker: React.FC<RealTimeTimePickerProps> = ({
@@ -212,25 +212,30 @@ export const RealTimeTimePicker: React.FC<RealTimeTimePickerProps> = ({
   label = 'Waktu / Jam',
   isLocked = false,
 }) => {
-  // If not locked, live clock is active by default. If locked, live clock is OFF.
+  // If locked, live clock MUST be false. If not locked, live clock is active by default.
   const [isLive, setIsLive] = useState(!isLocked);
   const [clockDate, setClockDate] = useState(new Date());
 
   // Sync isLive state if isLocked prop changes
   useEffect(() => {
-    setIsLive(!isLocked);
+    if (isLocked) {
+      setIsLive(false);
+    }
   }, [isLocked]);
 
-  // Live real-time ticker: runs only before data is saved
+  // Initialize value only if not locked and empty
+  useEffect(() => {
+    if (!isLocked && !value) {
+      const initNow = new Date();
+      const initH = String(initNow.getHours()).padStart(2, '0');
+      const initM = String(initNow.getMinutes()).padStart(2, '0');
+      onChange(`${initH}.${initM} WIB`);
+    }
+  }, [isLocked, value, onChange]);
+
+  // Live real-time ticker: runs only when isLive is true and not locked
   useEffect(() => {
     if (!isLive || isLocked) return;
-
-    // Immediately set current time
-    const initNow = new Date();
-    setClockDate(initNow);
-    const initH = String(initNow.getHours()).padStart(2, '0');
-    const initM = String(initNow.getMinutes()).padStart(2, '0');
-    onChange(`${initH}.${initM} WIB`);
 
     const timer = setInterval(() => {
       const now = new Date();
@@ -282,23 +287,14 @@ export const RealTimeTimePicker: React.FC<RealTimeTimePickerProps> = ({
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-slate-100 text-slate-700 border border-slate-300 inline-flex items-center gap-1">
               <Lock className="w-2.5 h-2.5 text-emerald-600" />
-              Terkunci (Tersimpan)
+              Terkunci (Data Tersimpan)
             </span>
-            <button
-              type="button"
-              onClick={handleSetCurrentTime}
-              className="text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold inline-flex items-center gap-1 transition-colors cursor-pointer"
-              title="Set sekali ke jam saat ini"
-            >
-              <Clock className="w-2.5 h-2.5 text-blue-600" />
-              Set Jam Sekarang
-            </button>
           </div>
         ) : (
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping" />
-              Live Real-Time Berjalan
+              {isLive ? 'Live Real-Time' : 'Manual / Terhenti'}
             </span>
             <button
               type="button"
@@ -318,7 +314,7 @@ export const RealTimeTimePicker: React.FC<RealTimeTimePickerProps> = ({
 
       <div
         className={`flex items-center gap-3 bg-white p-2.5 border rounded-xl shadow-xs transition-colors ${
-          isLocked ? 'border-slate-300' : 'border-emerald-400 ring-1 ring-emerald-200'
+          isLocked ? 'border-slate-300 bg-slate-50/80' : 'border-emerald-400 ring-1 ring-emerald-200'
         }`}
       >
         {/* Analog Clock Display */}
@@ -389,18 +385,18 @@ export const RealTimeTimePicker: React.FC<RealTimeTimePickerProps> = ({
               onChange(e.target.value);
             }}
             placeholder="07.30 WIB"
-            className="w-full px-2.5 py-1 text-sm font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800 font-mono"
+            className="w-full px-2.5 py-1 text-sm font-bold bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800 font-mono"
           />
           <span className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1 font-medium">
             {isLocked ? (
               <>
                 <Lock className="w-2.5 h-2.5 text-emerald-600" />
-                Waktu terkunci sesuai data kejadian (tidak berubah realtime tiap hari).
+                Waktu terkunci permanen (tidak bergerak/mengikuti real-time).
               </>
             ) : (
               <>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Jam otomatis bergerak real-time. Terkunci setelah data disimpan.
+                Otomatis terkunci secara permanen setelah data disimpan.
               </>
             )}
           </span>
