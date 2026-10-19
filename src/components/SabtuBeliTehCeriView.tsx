@@ -242,19 +242,6 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Link Foto Kegiatan
-                </label>
-                <input
-                  type="url"
-                  value={linkFoto}
-                  onChange={(e) => setLinkFoto(e.target.value)}
-                  placeholder="https://i.ibb.co/... atau Google Drive foto dokumentasi"
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 text-slate-800"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Keterangan
                 </label>
                 <input
@@ -447,10 +434,12 @@ export const SabtuBeliTehCeriView: React.FC<SabtuBeliTehCeriViewProps> = ({
                   <td className="py-1.5 font-bold text-slate-700 align-top">Rencana Inovasi / Kegiatan</td>
                   <td className="py-1.5 align-top leading-relaxed">: {printingRecord.rencanaInovasi || '-'}</td>
                 </tr>
-                <tr className="border-b border-slate-200">
-                  <td className="py-1.5 font-bold text-slate-700">Link Foto Kegiatan</td>
-                  <td className="py-1.5">: {printingRecord.linkFoto || 'Terlampir dalam arsip digital'}</td>
-                </tr>
+                {printingRecord.linkFoto && (
+                  <tr className="border-b border-slate-200">
+                    <td className="py-1.5 font-bold text-slate-700">Link Foto Kegiatan</td>
+                    <td className="py-1.5">: {printingRecord.linkFoto}</td>
+                  </tr>
+                )}
                 <tr>
                   <td className="py-1.5 font-bold text-slate-700">Keterangan</td>
                   <td className="py-1.5">: {printingRecord.keterangan || '-'}</td>

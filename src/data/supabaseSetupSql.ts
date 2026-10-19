@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.kelas_zona (
   terakhirdiperiksa text
 );
 
--- 2. PIKET HARIAN
+-- 2. PIKET HARIAN (Penyimpanan bukti fisik foto dihilangkan agar storage Supabase hemat & tidak penuh)
 CREATE TABLE IF NOT EXISTS public.piket_harian (
   id text PRIMARY KEY,
   haritanggal text,
@@ -28,15 +28,16 @@ CREATE TABLE IF NOT EXISTS public.piket_harian (
   namaanggota text,
   kelas text,
   hasiltemuan text,
-  linkfoto text,
   keterangan text,
   tandatanganurl text,
   namapenandatangan text,
   jabatanpenandatangan text,
   createdat text
 );
+-- Hapus kolom foto jika tabel sudah ada sebelumnya agar database storage langsung kosong
+ALTER TABLE IF EXISTS public.piket_harian DROP COLUMN IF EXISTS linkfoto;
 
--- 3. SABTU BELI TEH CERI
+-- 3. SABTU BELI TEH CERI (Penyimpanan bukti fisik foto dihilangkan agar storage Supabase hemat & tidak penuh)
 CREATE TABLE IF NOT EXISTS public.sabtu_beli_teh_ceri (
   id text PRIMARY KEY,
   haritanggal text,
@@ -44,13 +45,14 @@ CREATE TABLE IF NOT EXISTS public.sabtu_beli_teh_ceri (
   hasiltemuansatuminggu text,
   evaluasikegiatan text,
   rencanainovasi text,
-  linkfoto text,
   keterangan text,
   tandatanganurl text,
   namapenandatangan text,
   jabatanpenandatangan text,
   createdat text
 );
+-- Hapus kolom foto jika tabel sudah ada sebelumnya agar database storage langsung kosong
+ALTER TABLE IF EXISTS public.sabtu_beli_teh_ceri DROP COLUMN IF EXISTS linkfoto;
 
 -- 4. KEBUN LUAS BERSERI
 CREATE TABLE IF NOT EXISTS public.kebun_luas_berseri (

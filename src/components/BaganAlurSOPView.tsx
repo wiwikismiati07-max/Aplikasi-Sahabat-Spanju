@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Download,
   ZoomIn,
@@ -16,6 +16,7 @@ import {
   Sliders,
   GitBranch,
   ShieldAlert,
+  RefreshCw,
 } from 'lucide-react';
 
 interface BaganAlurSOPViewProps {
@@ -30,10 +31,116 @@ interface DiagramItem {
   subtitle: string;
   badge: string;
   imageUrl: string;
+  mirrorUrls: string[];
   sourceUrl: string;
   description: string;
   keyPoints: string[];
 }
+
+interface DiagramImageDisplayProps {
+  diagram: DiagramItem;
+  currentZoom: number;
+  onFullscreen: (title: string, url: string) => void;
+}
+
+const DiagramImageDisplay: React.FC<DiagramImageDisplayProps> = ({
+  diagram,
+  currentZoom,
+  onFullscreen,
+}) => {
+  const sources = useMemo(() => {
+    return [diagram.imageUrl, ...(diagram.mirrorUrls || [])];
+  }, [diagram]);
+
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  const currentSrc = sources[activeIdx] || diagram.imageUrl;
+
+  const handleError = () => {
+    if (activeIdx < sources.length - 1) {
+      setActiveIdx((prev) => prev + 1);
+    } else {
+      setIsLoading(false);
+      setHasError(true);
+    }
+  };
+
+  const handleLoad = () => {
+    setIsLoading(false);
+    setHasError(false);
+  };
+
+  const handleRetry = () => {
+    setIsLoading(true);
+    setHasError(false);
+    setActiveIdx(0);
+  };
+
+  return (
+    <div className="w-full bg-[#f8fbfa] border border-slate-200 rounded-2xl p-3 sm:p-6 overflow-hidden flex items-center justify-center min-h-[340px] sm:min-h-[480px] relative">
+      {isLoading && !hasError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50/90 z-10 backdrop-blur-2xs rounded-2xl">
+          <div className="w-9 h-9 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs font-bold text-slate-700 mt-3">Memuat bagan SOP...</p>
+          <span className="text-[10px] text-slate-400 mt-0.5">Menghubungkan ke server media resolusi tinggi</span>
+        </div>
+      )}
+
+      {hasError ? (
+        <div className="flex flex-col items-center justify-center p-6 text-center max-w-md bg-amber-50/90 border border-amber-200 rounded-2xl my-6">
+          <ShieldAlert className="w-10 h-10 text-amber-600 mb-2" />
+          <h4 className="text-sm font-bold text-amber-900">Gagal Memuat Pratinjau Gambar</h4>
+          <p className="text-xs text-amber-700 mt-1 mb-4 leading-relaxed">
+            Koneksi internet sekolah atau firewall Anda mungkin membatasi akses langsung ke CDN gambar. Silakan muat ulang atau buka gambar secara langsung.
+          </p>
+          <div className="flex items-center gap-2 flex-wrap justify-center">
+            <button
+              type="button"
+              onClick={handleRetry}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Muat Ulang</span>
+            </button>
+            <a
+              href={diagram.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-white hover:bg-slate-50 border border-amber-300 text-amber-900 rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5"
+            >
+              <span>Buka Resolusi Asli</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </div>
+      ) : (
+        <div
+          style={{
+            transform: `scale(${currentZoom})`,
+            transformOrigin: 'top center',
+            transition: 'transform 0.2s ease-in-out',
+          }}
+          className="w-full flex items-center justify-center max-w-full"
+        >
+          <img
+            key={currentSrc}
+            src={currentSrc}
+            alt={diagram.title}
+            className={`max-w-full h-auto object-contain rounded-xl shadow-md border border-slate-200 bg-white cursor-zoom-in transition-opacity duration-300 ${
+              isLoading ? 'opacity-0' : 'opacity-100'
+            }`}
+            onLoad={handleLoad}
+            onError={handleError}
+            onClick={() => onFullscreen(diagram.title, currentSrc)}
+            title="Klik untuk memperbesar layar penuh"
+          />
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const BaganAlurSOPView: React.FC<BaganAlurSOPViewProps> = ({
   onOpenMenu,
@@ -65,6 +172,10 @@ export const BaganAlurSOPView: React.FC<BaganAlurSOPViewProps> = ({
         'Bagan standar operasional (SOP) untuk penanganan kasus kekerasan dan perundungan di sekolah.',
       badge: 'SOP Resmi PPKSP',
       imageUrl: 'https://i.ibb.co.com/4ntsk04H/ALUR-PENANGANAN-PASS-TEMENAN.png',
+      mirrorUrls: [
+        'https://images.weserv.nl/?url=https://i.ibb.co.com/4ntsk04H/ALUR-PENANGANAN-PASS-TEMENAN.png',
+        'https://i.ibb.co/4ntsk04H/ALUR-PENANGANAN-PASS-TEMENAN.png',
+      ],
       sourceUrl: 'https://i.ibb.co.com/4ntsk04H/ALUR-PENANGANAN-PASS-TEMENAN.png',
       description:
         'Alur terintegrasi pencegahan dan penanganan kekerasan siswa di lingkungan UPT SMP Negeri 7 Pasuruan bersama Konselor Sebaya PASS TEMENAN dan Tim TPPK.',
@@ -83,7 +194,11 @@ export const BaganAlurSOPView: React.FC<BaganAlurSOPViewProps> = ({
         'Struktur indikator, parameter tolak ukur, dan instrumen pembiasaan ramah anak Sahabat SPANJU.',
       badge: 'Struktur Tolak Ukur',
       imageUrl:
+        'https://i.ibb.co.com/S4FX6Djd/Bagan-Struktur-Tolak-Ukur-E-Pass-Temenan-Spanju.png',
+      mirrorUrls: [
+        'https://images.weserv.nl/?url=https://i.ibb.co.com/S4FX6Djd/Bagan-Struktur-Tolak-Ukur-E-Pass-Temenan-Spanju.png',
         'https://i.ibb.co/S4FX6Djd/Bagan-Struktur-Tolak-Ukur-E-Pass-Temenan-Spanju.png',
+      ],
       sourceUrl: 'https://ibb.co.com/Tx9BwDfb',
       description:
         'Kerangka kerja pengukuran budaya sekolah ramah anak yang menghubungkan 5 indikator utama dengan kegiatan pembiasaan dan evaluasi 24 rombel.',
@@ -102,7 +217,11 @@ export const BaganAlurSOPView: React.FC<BaganAlurSOPViewProps> = ({
         'Mekanisme penilaian berjenjang, klasifikasi tingkat kasus, dan penetapan keputusan mediasi.',
       badge: 'Bagan Keputusan',
       imageUrl:
+        'https://i.ibb.co.com/XHSRvkR/Alur-Penilaian-Tolak-Ukur-Bagan-Keputusan.png',
+      mirrorUrls: [
+        'https://images.weserv.nl/?url=https://i.ibb.co.com/XHSRvkR/Alur-Penilaian-Tolak-Ukur-Bagan-Keputusan.png',
         'https://i.ibb.co/XHSRvkR/Alur-Penilaian-Tolak-Ukur-Bagan-Keputusan.png',
+      ],
       sourceUrl: 'https://ibb.co.com/FpgTjqT',
       description:
         'Alur logika pengambilan keputusan mulai dari telaah aduan, penilaian bobot pelanggaran, penentuan rekomendasi sanksi edukatif, hingga kesepakatan damai.',
@@ -121,7 +240,11 @@ export const BaganAlurSOPView: React.FC<BaganAlurSOPViewProps> = ({
         'Diagram respon cepat pelaporan insiden, tindak lanjut restorative justice, dan pemulihan karakter.',
       badge: 'Respon Cepat 1x24 Jam',
       imageUrl:
+        'https://i.ibb.co.com/spq7dvH0/Diagram-Alur-Penilaian-Respon-Laporan.png',
+      mirrorUrls: [
+        'https://images.weserv.nl/?url=https://i.ibb.co.com/spq7dvH0/Diagram-Alur-Penilaian-Respon-Laporan.png',
         'https://i.ibb.co/spq7dvH0/Diagram-Alur-Penilaian-Respon-Laporan.png',
+      ],
       sourceUrl: 'https://ibb.co.com/NgKRd6S8',
       description:
         'SOP tindak lanjut respon berbatas waktu memastikan setiap aduan tertangani dalam waktu kurang dari 24 jam dengan pencatatan digital terkunci aman.',
@@ -325,31 +448,11 @@ export const BaganAlurSOPView: React.FC<BaganAlurSOPViewProps> = ({
               </div>
 
               {/* Diagram Display Container */}
-              <div className="w-full bg-[#f8fbfa] border border-slate-200 rounded-2xl p-3 sm:p-6 overflow-hidden flex items-center justify-center">
-                <div
-                  style={{
-                    transform: `scale(${currentZoom})`,
-                    transformOrigin: 'top center',
-                    transition: 'transform 0.2s ease-in-out',
-                  }}
-                  className="w-full flex items-center justify-center max-w-full"
-                >
-                  <img
-                    src={diagram.imageUrl}
-                    alt={diagram.title}
-                    className="max-w-full h-auto object-contain rounded-xl shadow-md border border-slate-200 bg-white"
-                    crossOrigin="anonymous"
-                    loading="lazy"
-                    onError={(e) => {
-                      // Fallback if direct image encounters network block
-                      const target = e.currentTarget;
-                      if (!target.src.includes('error-fallback')) {
-                        target.src = diagram.imageUrl;
-                      }
-                    }}
-                  />
-                </div>
-              </div>
+              <DiagramImageDisplay
+                diagram={diagram}
+                currentZoom={currentZoom}
+                onFullscreen={(title, url) => setFullscreenImage({ title, url })}
+              />
 
               {/* Diagram Key Points Footer */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2">
@@ -405,8 +508,7 @@ export const BaganAlurSOPView: React.FC<BaganAlurSOPViewProps> = ({
             <img
               src={fullscreenImage.url}
               alt={fullscreenImage.title}
-              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-              crossOrigin="anonymous"
+              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl bg-white"
             />
           </div>
         </div>

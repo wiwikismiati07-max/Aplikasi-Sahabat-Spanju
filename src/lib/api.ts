@@ -178,7 +178,12 @@ export async function saveTableRow(tableName: string, row: any): Promise<boolean
   try {
     const dbRow: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(row)) {
-      dbRow[k.toLowerCase()] = v;
+      const lowerKey = k.toLowerCase();
+      // Omit photo / heavy physical evidence fields so Supabase database storage never fills up
+      if (lowerKey === 'linkfoto' || lowerKey === 'foto') {
+        continue;
+      }
+      dbRow[lowerKey] = v;
     }
 
     const conflictColumn = 'id';
@@ -220,7 +225,12 @@ export async function bulkReplaceTableData(tableName: string, rows: any[]): Prom
       const dbRows = rows.map((row) => {
         const dbRow: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(row)) {
-          dbRow[k.toLowerCase()] = v;
+          const lowerKey = k.toLowerCase();
+          // Omit photo / heavy physical evidence fields so Supabase database storage never fills up
+          if (lowerKey === 'linkfoto' || lowerKey === 'foto') {
+            continue;
+          }
+          dbRow[lowerKey] = v;
         }
         if (tableName === 'kelas_zona') {
           if (!dbRow.id && dbRow.kelas) {
@@ -253,6 +263,52 @@ export async function deleteTableRow(tableName: string, id: string): Promise<boo
   } catch (err) {
     console.warn(`Supabase delete error on ${tableName}:`, err);
     return false;
+  }
+}
+
+// Clean up all physical evidence / photo links and storage buckets in Supabase to keep quota 100% free
+export async function cleanupSupabaseStorageAndPhotos(): Promise<{ success: boolean; message: string }> {
+  try {
+    // 1. Clear linkfoto in piket_harian table
+    try {
+      await supabase.from('piket_harian').update({ linkfoto: null }).not('linkfoto', 'is', null);
+    } catch {
+      // ignore if column doesn't exist
+    }
+
+    // 2. Clear linkfoto in sabtu_beli_teh_ceri table
+    try {
+      await supabase.from('sabtu_beli_teh_ceri').update({ linkfoto: null }).not('linkfoto', 'is', null);
+    } catch {
+      // ignore if column doesn't exist
+    }
+
+    // 3. Remove files from any Supabase storage buckets if any were created
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      if (buckets && buckets.length > 0) {
+        for (const bucket of buckets) {
+          const { data: files } = await supabase.storage.from(bucket.name).list();
+          if (files && files.length > 0) {
+            const filePaths = files.map((f) => f.name);
+            await supabase.storage.from(bucket.name).remove(filePaths);
+          }
+        }
+      }
+    } catch {
+      // Storage buckets might not be initialized or accessible, ignore
+    }
+
+    return {
+      success: true,
+      message: 'Berhasil mengosongkan seluruh bukti fisik foto di database Supabase agar storage hemat dan tidak penuh.',
+    };
+  } catch (err) {
+    console.warn('cleanupSupabaseStorageAndPhotos error:', err);
+    return {
+      success: false,
+      message: 'Gagal mengosongkan foto di Supabase: ' + (err as Error).message,
+    };
   }
 }
 

@@ -45,7 +45,13 @@ import {
   initialMedia,
   initialSurvei,
 } from './data/initialData';
-import { fetchTableData, saveTableData, bulkReplaceTableData, deleteTableData } from './lib/api';
+import {
+  fetchTableData,
+  saveTableData,
+  bulkReplaceTableData,
+  deleteTableData,
+  cleanupSupabaseStorageAndPhotos,
+} from './lib/api';
 
 // Components
 import { Sidebar } from './components/Sidebar';
@@ -98,12 +104,14 @@ export default function App() {
 
   const [piketList, setPiketList] = useState<PiketRecord[]>(() => {
     const saved = localStorage.getItem('spanju_piket_v1');
-    return saved ? JSON.parse(saved) : initialPiket;
+    const parsed: PiketRecord[] = saved ? JSON.parse(saved) : initialPiket;
+    return parsed.map((p) => ({ ...p, linkFoto: '' }));
   });
 
   const [ceriList, setCeriList] = useState<CeriRecord[]>(() => {
     const saved = localStorage.getItem('spanju_ceri_v1');
-    return saved ? JSON.parse(saved) : initialCeri;
+    const parsed: CeriRecord[] = saved ? JSON.parse(saved) : initialCeri;
+    return parsed.map((c) => ({ ...c, linkFoto: '' }));
   });
 
   const [kebunList, setKebunList] = useState<KebunRecord[]>(() => {
@@ -287,6 +295,9 @@ export default function App() {
   useEffect(() => {
     async function loadCloudData() {
       try {
+        // Clean up any heavy photos/bukti fisik in Supabase storage & database so storage does not fill up
+        cleanupSupabaseStorageAndPhotos().catch(() => {});
+
         const cloudKelas = await fetchTableData<KelasZona>('kelas_zona');
         if (cloudKelas && cloudKelas.length > 0) {
           const merged = ensureAll24Kelas(cloudKelas);
@@ -307,14 +318,16 @@ export default function App() {
 
         const cloudPiket = await fetchTableData<PiketRecord>('piket_harian');
         if (cloudPiket && cloudPiket.length > 0) {
-          setPiketList(cloudPiket);
+          const sanitizedPiket = cloudPiket.map((p) => ({ ...p, linkFoto: '' }));
+          setPiketList(sanitizedPiket);
         } else if (piketList.length > 0) {
           bulkReplaceTableData('piket_harian', piketList);
         }
 
         const cloudCeri = await fetchTableData<CeriRecord>('sabtu_beli_teh_ceri');
         if (cloudCeri && cloudCeri.length > 0) {
-          setCeriList(cloudCeri);
+          const sanitizedCeri = cloudCeri.map((c) => ({ ...c, linkFoto: '' }));
+          setCeriList(sanitizedCeri);
         } else if (ceriList.length > 0) {
           bulkReplaceTableData('sabtu_beli_teh_ceri', ceriList);
         }

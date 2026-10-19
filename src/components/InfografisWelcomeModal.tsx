@@ -189,7 +189,6 @@ export const InfografisWelcomeModal: React.FC<InfografisWelcomeModalProps> = ({
                   src={logoPassTemenan}
                   alt="Logo PASS TEMENAN"
                   className="w-full h-full object-contain rounded-full"
-                  crossOrigin="anonymous"
                 />
               </div>
             </div>
@@ -220,7 +219,6 @@ export const InfografisWelcomeModal: React.FC<InfografisWelcomeModalProps> = ({
                 src={infografisImgUrl}
                 alt="SAHABAT SPANJU: Sekolah Aman, Harmonis, Anti Bullying dan Tindak Kekerasan"
                 className="w-full h-auto object-contain block"
-                crossOrigin="anonymous"
               />
             </div>
           </div>

@@ -6,13 +6,10 @@ import {
   Trash2,
   Edit,
   ExternalLink,
-  Upload,
-  Camera,
   Check,
   X,
   Layers,
   Sparkles,
-  Link2,
   Users,
   UserCheck,
 } from 'lucide-react';
@@ -61,7 +58,6 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
   const [linkFoto, setLinkFoto] = useState('');
   const [keterangan, setKeterangan] = useState('');
   const [tandaTanganUrl, setTandaTanganUrl] = useState('');
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Multi-Student Selection State
   const [selectedStudents, setSelectedStudents] = useState<SiswaMaster[]>([]);
@@ -153,75 +149,6 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
     setIsFormOpen(true);
   };
 
-  const handleTimemarkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingPhoto(true);
-    try {
-      // Create a canvas to apply Timemark watermark stamp
-      const img = new Image();
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        img.onload = async () => {
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
-
-          // Draw original image
-          ctx.drawImage(img, 0, 0);
-
-          // Draw Timemark stamp box at bottom
-          const bannerHeight = Math.max(img.height * 0.12, 70);
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-          ctx.fillRect(0, img.height - bannerHeight, img.width, bannerHeight);
-
-          // Stamp text
-          ctx.fillStyle = '#ffffff';
-          const fontSize = Math.max(img.width * 0.024, 18);
-          ctx.font = `bold ${fontSize}px sans-serif`;
-          ctx.fillText(`PIKET HARIAN SAHABAT SPANJU - SMPN 7 PASURUAN`, 24, img.height - bannerHeight + fontSize * 1.3);
-
-          ctx.font = `${fontSize * 0.8}px sans-serif`;
-          ctx.fillStyle = '#10b981';
-          ctx.fillText(`${hariTanggal} • ${waktu}`, 24, img.height - bannerHeight + fontSize * 2.5);
-
-          // Convert to base64
-          const stampedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-          // Upload to ImgBB via standard API or direct URL fallback
-          const base64Data = stampedDataUrl.split(',')[1];
-          const formData = new FormData();
-          formData.append('image', base64Data);
-
-          try {
-            // Use ImgBB free API key
-            const res = await fetch('https://api.imgbb.com/1/upload?key=52e1fc1636ebff2a3fef39ff5213d2f9', {
-              method: 'POST',
-              body: formData,
-            });
-            const json = await res.json();
-            if (json?.data?.url) {
-              setLinkFoto(json.data.url);
-            } else {
-              setLinkFoto(stampedDataUrl);
-            }
-          } catch {
-            setLinkFoto(stampedDataUrl);
-          }
-          setIsUploadingPhoto(false);
-        };
-        img.src = event.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    } catch {
-      setIsUploadingPhoto(false);
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!namaAnggota || !hasilTemuan) {
@@ -274,7 +201,7 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
               Piket Harian Sahabat SPANJU
             </h1>
             <p className="text-xs text-sky-100 max-w-xl">
-              Pencatatan pembiasaan 5S, keamanan lingkungan sekolah, foto kegiatan timemark, dan tanda tangan digital petugas.
+              Pencatatan pembiasaan 5S, keamanan lingkungan sekolah, dan tanda tangan digital petugas.
             </p>
           </div>
         </div>
@@ -313,7 +240,7 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                   {editingId ? 'Edit Laporan Piket Harian' : 'Input Laporan Piket Harian'}
                 </h3>
                 <p className="text-xs text-sky-100 mt-0.5">
-                  Lengkapi data hasil patroli harian dan foto kegiatan
+                  Lengkapi data hasil patroli harian dan ketertiban siswa
                 </p>
               </div>
               <button
@@ -476,52 +403,6 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                 />
               </div>
 
-              {/* Link Foto Kegiatan with Timemark / ImgBB */}
-              <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                    <Link2 className="w-4 h-4 text-sky-600" />
-                    Link Foto Kegiatan (ImgBB / URL Luar)
-                  </label>
-                  {linkFoto && (
-                    <a
-                      href={linkFoto}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] font-semibold text-sky-600 hover:underline flex items-center gap-1"
-                    >
-                      Buka Foto <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="url"
-                    value={linkFoto}
-                    onChange={(e) => setLinkFoto(e.target.value)}
-                    placeholder="https://i.ibb.co/... atau tempel tautan foto luar"
-                    className="flex-1 px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-sky-500 text-slate-800"
-                  />
-
-                  {/* Upload with Timemark Button */}
-                  <label className="cursor-pointer inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs whitespace-nowrap transition-colors">
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>{isUploadingPhoto ? 'Memproses...' : 'Upload Timemark'}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleTimemarkUpload}
-                      disabled={isUploadingPhoto}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-                <p className="text-[10px] text-slate-500">
-                  Foto otomatis diberi stempel Timemark SPANJU dan diunggah ke ImgBB sehingga hanya tautan ringan yang disimpan di database Supabase.
-                </p>
-              </div>
-
               {/* Keterangan */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
@@ -656,11 +537,11 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                   <span className="font-semibold text-slate-800">{item.namaAnggota}</span>
                 </div>
 
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">
-                    Foto Kegiatan
-                  </span>
-                  {item.linkFoto ? (
+                {item.linkFoto ? (
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-400 block">
+                      Foto Kegiatan
+                    </span>
                     <a
                       href={item.linkFoto}
                       target="_blank"
@@ -669,10 +550,8 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                     >
                       Lihat Foto Timemark <ExternalLink className="w-3 h-3" />
                     </a>
-                  ) : (
-                    <span className="text-slate-400 italic">Tidak ada lampiran foto</span>
-                  )}
-                </div>
+                  </div>
+                ) : null}
 
                 <div className="sm:col-span-2">
                   <span className="text-[10px] uppercase font-bold text-slate-400 block">
@@ -731,12 +610,14 @@ export const PiketHarianView: React.FC<PiketHarianViewProps> = ({
                   <td className="py-1.5 font-bold text-slate-700 align-top">Hasil Temuan Harian</td>
                   <td className="py-1.5 align-top leading-relaxed">: {printingRecord.hasilTemuan}</td>
                 </tr>
-                <tr className="border-b border-slate-200">
-                  <td className="py-1.5 font-bold text-slate-700">Foto Kegiatan</td>
-                  <td className="py-1.5">
-                    : {printingRecord.linkFoto ? printingRecord.linkFoto : 'Terlampir dalam sistem digital'}
-                  </td>
-                </tr>
+                {printingRecord.linkFoto && (
+                  <tr className="border-b border-slate-200">
+                    <td className="py-1.5 font-bold text-slate-700">Foto Kegiatan</td>
+                    <td className="py-1.5">
+                      : {printingRecord.linkFoto}
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td className="py-1.5 font-bold text-slate-700">Keterangan</td>
                   <td className="py-1.5">: {printingRecord.keterangan || '-'}</td>

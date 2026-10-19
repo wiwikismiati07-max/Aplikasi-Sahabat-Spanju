@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Database, Copy, Check, X, Code, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Database, Copy, Check, X, Code, ExternalLink, ShieldCheck, Trash2, Sparkles } from 'lucide-react';
 import { SUPABASE_SETUP_SQL } from '../data/supabaseSetupSql';
-import { SUPABASE_URL } from '../lib/api';
+import { SUPABASE_URL, cleanupSupabaseStorageAndPhotos } from '../lib/api';
 
 interface SupabaseSqlModalProps {
   isOpen: boolean;
@@ -10,6 +10,8 @@ interface SupabaseSqlModalProps {
 
 export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
+  const [isCleaning, setIsCleaning] = useState(false);
+  const [cleanMessage, setCleanMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -17,6 +19,19 @@ export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onCl
     navigator.clipboard.writeText(SUPABASE_SETUP_SQL);
     setCopied(true);
     setTimeout(() => setCopied(false), 3000);
+  };
+
+  const handleCleanStorage = async () => {
+    setIsCleaning(true);
+    setCleanMessage(null);
+    try {
+      const res = await cleanupSupabaseStorageAndPhotos();
+      setCleanMessage(res.message);
+    } catch (e) {
+      setCleanMessage('Terjadi kesalahan: ' + (e as Error).message);
+    } finally {
+      setIsCleaning(false);
+    }
   };
 
   return (
@@ -76,6 +91,34 @@ export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onCl
                 Klik tombol <strong className="text-slate-900">&ldquo;Run&rdquo;</strong> (atau tekan Ctrl+Enter). Seluruh 12 tabel &amp; akses RLS multi-user akan langsung aktif secara otomatis!
               </li>
             </ol>
+          </div>
+
+          {/* Pembersihan Bukti Fisik / Storage Bebas Penuh */}
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-1.5 font-bold text-amber-900 text-xs">
+                <Trash2 className="w-4 h-4 text-amber-600" />
+                <span>Optimalisasi Storage: Hapus Bukti Fisik &amp; Foto di Supabase</span>
+              </div>
+              <p className="text-[11px] text-amber-700 mt-0.5">
+                Mengosongkan semua tautan foto dari tabel database Supabase secara instan agar kuota penyimpanan tidak penuh.
+              </p>
+              {cleanMessage && (
+                <div className="mt-2 text-[11px] font-semibold text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-lg border border-emerald-200 inline-flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{cleanMessage}</span>
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleCleanStorage}
+              disabled={isCleaning}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-xs transition-all whitespace-nowrap cursor-pointer flex-shrink-0"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>{isCleaning ? 'Membersihkan...' : 'Kosongkan Foto Supabase'}</span>
+            </button>
           </div>
 
           <div className="relative rounded-2xl bg-slate-900 border border-slate-800 text-emerald-300 p-4 font-mono text-[11px] leading-relaxed max-h-[380px] overflow-y-auto">
