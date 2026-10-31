@@ -647,6 +647,15 @@ export default function App() {
     saveTableData('media_edukasi', newItem);
   };
 
+  const handleUpdateMedia = (id: string, data: Partial<MediaEdukasiItem>) => {
+    setMediaList((prev) => {
+      const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
+      const updatedItem = next.find((item) => item.id === id);
+      if (updatedItem) saveTableData('media_edukasi', updatedItem);
+      return next;
+    });
+  };
+
   const handleDeleteMedia = (id: string) => {
     setMediaList((prev) => prev.filter((m) => m.id !== id));
     deleteTableData('media_edukasi', id);
@@ -968,6 +977,7 @@ export default function App() {
             <MediaEdukasiView
               mediaList={mediaList}
               onAddMedia={handleAddMedia}
+              onUpdateMedia={handleUpdateMedia}
               onDeleteMedia={handleDeleteMedia}
               onOpenMenu={() => setActiveTab('menu_utama')}
               isAdmin={isAdmin}
