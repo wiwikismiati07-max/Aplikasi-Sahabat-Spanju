@@ -211,14 +211,95 @@ export const INITIAL_BUKU_TAMU: BukuTamuRecord[] = [
   },
 ];
 
+export const PERMANENT_GOOGLE_SITES_URL = 'https://sites.google.com/view/berandapasstemenanspanju/home';
+
+export const PERMANENT_GOOGLE_SITES_MEDIA: MediaEdukasiItem = {
+  id: 'media-beranda-pass-temenan-official',
+  judul: 'Portal Resmi Beranda PASS TEMENAN - Sahabat SPANJU',
+  deskripsi: 'Portal utama web Beranda PASS TEMENAN SMPN 7 Pasuruan: dokumentasi digital, panduan pencegahan kekerasan, modul literasi ramah anak, dan arsip terpadu TPPK.',
+  url: PERMANENT_GOOGLE_SITES_URL,
+  dokumentasiMateriUrl: PERMANENT_GOOGLE_SITES_URL,
+  kategori: 'Regulasi',
+  durasi: 'Portal Web Resmi',
+  tanggal: '2026-09-20',
+};
+
 export const INITIAL_MEDIA_EDUKASI: MediaEdukasiItem[] = [
+  PERMANENT_GOOGLE_SITES_MEDIA,
   {
-    id: 'media-1',
+    id: 'media-modul-1',
+    judul: 'PROGRAM PASS TEMENAN SPANJU',
+    deskripsi: 'Pedoman pelaksanaan komprehensif Program Pencegahan dan Penanganan Kekerasan di Satuan Pendidikan (PPKSP) UPT SMPN 7 Pasuruan.',
+    dokumentasiMateriUrl: PERMANENT_GOOGLE_SITES_URL,
+    url: PERMANENT_GOOGLE_SITES_URL,
+    kategori: 'Modul',
+    durasi: 'E-Book / Modul',
+    tanggal: '2026-09-20',
+  },
+  {
+    id: 'media-modul-2',
+    judul: 'Kemenag Kopas Gandeng UIN Tulungagung Dalam Gelaran BRUS, Bahas Bahaya Bullying dan Batasan Pergaulan Remaja',
+    deskripsi: 'Sinergi penguatan karakter pelajar, bimbingan remaja usia sekolah (BRUS), dan pencegahan perundungan di lingkungan sekolah.',
+    dokumentasiMateriUrl: PERMANENT_GOOGLE_SITES_URL,
+    url: PERMANENT_GOOGLE_SITES_URL,
+    kategori: 'Modul',
+    durasi: 'Artikel & Modul',
+    tanggal: '2026-09-20',
+  },
+  {
+    id: 'media-modul-3',
+    judul: 'ANALISIS EVALUASI KEBERHASILAN PROGRAM PASS TEMENAN DAN RTL (RENCANA TINDAK LANJUT) 2026',
+    deskripsi: 'Evaluasi berkala indikator tolak ukur budaya ramah anak 24 rombel dan penyusunan tindak lanjut semester.',
+    dokumentasiMateriUrl: PERMANENT_GOOGLE_SITES_URL,
+    url: PERMANENT_GOOGLE_SITES_URL,
+    kategori: 'Modul',
+    durasi: 'Dokumen Evaluasi',
+    tanggal: '2026-09-20',
+  },
+  {
+    id: 'media-modul-4',
     judul: 'Panduan Praktis Mengenali & Menghentikan Perundungan di Sekolah',
-    dokumentasiMateriUrl: 'https://sites.google.com/view/berandapasstemenanspanju/home',
+    deskripsi: 'Panduan ringkas bagi siswa, duta teman sebaya, dan guru untuk mengenali tanda perundungan serta penanganannya.',
+    dokumentasiMateriUrl: PERMANENT_GOOGLE_SITES_URL,
+    url: PERMANENT_GOOGLE_SITES_URL,
+    kategori: 'Modul',
+    durasi: 'Modul Praktis',
     tanggal: '2026-09-20',
   },
 ];
+
+export const ensurePermanentMedia = (list?: MediaEdukasiItem[]): MediaEdukasiItem[] => {
+  const safeList = Array.isArray(list) && list.length > 0 ? [...list] : [...INITIAL_MEDIA_EDUKASI];
+
+  // Find official portal
+  const officialIdx = safeList.findIndex(
+    (m) =>
+      m.id === 'media-beranda-pass-temenan-official' ||
+      (m.url && m.url.includes('sites.google.com/view/berandapasstemenanspanju')) ||
+      (m.dokumentasiMateriUrl && m.dokumentasiMateriUrl.includes('sites.google.com/view/berandapasstemenanspanju'))
+  );
+
+  let mergedOfficial: MediaEdukasiItem;
+  let restList: MediaEdukasiItem[];
+
+  if (officialIdx !== -1) {
+    const existing = safeList[officialIdx];
+    mergedOfficial = {
+      ...PERMANENT_GOOGLE_SITES_MEDIA,
+      ...existing,
+      id: 'media-beranda-pass-temenan-official',
+      url: PERMANENT_GOOGLE_SITES_URL,
+      dokumentasiMateriUrl: PERMANENT_GOOGLE_SITES_URL,
+    };
+    restList = safeList.filter((_, idx) => idx !== officialIdx);
+  } else {
+    mergedOfficial = PERMANENT_GOOGLE_SITES_MEDIA;
+    restList = safeList;
+  }
+
+  return [mergedOfficial, ...restList];
+};
+
 
 export const INITIAL_SURVEI: SurveiKepuasanRecord[] = [
   {

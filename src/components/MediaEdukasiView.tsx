@@ -20,9 +20,11 @@ import {
   UploadCloud,
   HelpCircle,
   Link2,
+  Lock,
 } from 'lucide-react';
 import { MediaEdukasiItem } from '../types';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
+import { PERMANENT_GOOGLE_SITES_URL } from '../data/initialData';
 
 interface MediaEdukasiViewProps {
   mediaList: MediaEdukasiItem[];
@@ -147,6 +149,7 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
   const [selectedLocalFileMedia, setSelectedLocalFileMedia] = useState<MediaEdukasiItem | null>(null);
   const [replacementUrl, setReplacementUrl] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedPortalLink, setCopiedPortalLink] = useState(false);
 
   // Form Fields
   const [judul, setJudul] = useState('');
@@ -222,6 +225,13 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
     if (isLocalFileUrl(targetUrl)) {
       setSelectedLocalFileMedia(media);
       setReplacementUrl('');
+      return;
+    }
+
+    // Google Sites cannot be framed due to X-Frame-Options: SAMEORIGIN -> open directly in new tab
+    if (targetUrl.includes('sites.google.com')) {
+      const finalUrl = normalizeWebUrl(targetUrl);
+      window.open(finalUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
@@ -312,6 +322,76 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
         </div>
       </div>
 
+      {/* Pinned Permanent Spotlight: Beranda PASS TEMENAN SPANJU Google Sites */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-violet-900 to-purple-950 p-5 sm:p-7 text-white shadow-xl border-2 border-emerald-400/40">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-violet-500/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 text-xs font-black uppercase tracking-wider shadow-xs">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                Portal Web Resmi Permanen
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-violet-200 text-xs font-medium backdrop-blur-xs">
+                UPT SMPN 7 Pasuruan
+              </span>
+            </div>
+
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                <span>Beranda PASS TEMENAN SPANJU</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-violet-100 mt-1.5 leading-relaxed">
+                Pusat terpadu informasi dan media edukasi digital resmi: arsip kegiatan, pedoman pencegahan kekerasan, modul literasi ramah anak, dan modul penguatan karakter siswa SMPN 7 Pasuruan.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-200 bg-emerald-950/60 px-3 py-1.5 rounded-xl border border-emerald-500/30 select-all max-w-full overflow-hidden text-ellipsis">
+                <Link2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                <span className="truncate">{PERMANENT_GOOGLE_SITES_URL}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-2.5 w-full sm:w-auto flex-shrink-0">
+            <a
+              href={PERMANENT_GOOGLE_SITES_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <span>Buka Beranda Portal Resmi</span>
+              <ExternalLink className="w-4 h-4 stroke-[2.5]" />
+            </a>
+
+            <button
+              type="button"
+              onClick={() => {
+                navigator.clipboard.writeText(PERMANENT_GOOGLE_SITES_URL);
+                setCopiedPortalLink(true);
+                setTimeout(() => setCopiedPortalLink(false), 2000);
+              }}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-colors cursor-pointer"
+            >
+              {copiedPortalLink ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-300" />
+                  <span className="text-emerald-200">Tautan Berhasil Disalin!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 text-violet-200" />
+                  <span>Salin Tautan Portal</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Controls & Filter */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
@@ -355,19 +435,28 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
 
           const rawUrl = m.url || m.dokumentasiMateriUrl || '';
           const isLocal = isLocalFileUrl(rawUrl);
+          const isOfficialPermanent =
+            m.id === 'media-beranda-pass-temenan-official' ||
+            rawUrl.includes('sites.google.com/view/berandapasstemenanspanju');
 
           return (
             <div
               key={m.id}
-              className={`bg-white rounded-2xl border p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group ${
-                isLocal ? 'border-amber-300 ring-1 ring-amber-200' : 'border-slate-200'
+              className={`rounded-2xl border p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between group ${
+                isOfficialPermanent
+                  ? 'bg-gradient-to-br from-emerald-50/40 via-white to-teal-50/20 border-emerald-300 ring-2 ring-emerald-400/30'
+                  : isLocal
+                  ? 'bg-white border-amber-300 ring-1 ring-amber-200'
+                  : 'bg-white border-slate-200'
               }`}
             >
               <div>
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div
                     className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isLocal
+                      isOfficialPermanent
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : isLocal
                         ? 'bg-amber-100 text-amber-700'
                         : 'bg-violet-100 text-violet-700'
                     }`}
@@ -375,6 +464,12 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {isOfficialPermanent && (
+                      <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xs flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-emerald-200" />
+                        <span>PORTAL RESMI PERMANEN</span>
+                      </span>
+                    )}
                     {isLocal && (
                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3 text-amber-600" />
@@ -387,7 +482,13 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
                   </div>
                 </div>
 
-                <h4 className="text-sm font-bold text-slate-900 group-hover:text-violet-700 transition-colors leading-snug">
+                <h4
+                  className={`text-sm font-bold transition-colors leading-snug ${
+                    isOfficialPermanent
+                      ? 'text-emerald-950 group-hover:text-emerald-700'
+                      : 'text-slate-900 group-hover:text-violet-700'
+                  }`}
+                >
                   {m.judul}
                 </h4>
                 {m.deskripsi ? (
@@ -419,18 +520,30 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
                 <button
                   type="button"
                   onClick={() => handleOpenMedia(m)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    isLocal
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isOfficialPermanent
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'
+                      : isLocal
                       ? 'bg-amber-600 hover:bg-amber-700 text-white shadow-xs'
                       : 'bg-violet-600 hover:bg-violet-700 text-white shadow-xs'
                   }`}
                 >
-                  {isLocal ? (
-                    <AlertTriangle className="w-3.5 h-3.5" />
+                  {isOfficialPermanent ? (
+                    <>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Buka Portal Resmi</span>
+                    </>
+                  ) : isLocal ? (
+                    <>
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>Perbaiki &amp; Buka Materi</span>
+                    </>
                   ) : (
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <>
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Buka Materi</span>
+                    </>
                   )}
-                  <span>{isLocal ? 'Perbaiki & Buka Materi' : 'Buka Materi'}</span>
                 </button>
 
                 <div className="flex items-center gap-1">
@@ -439,7 +552,7 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
                       href={normalizeWebUrl(rawUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1.5 text-slate-400 hover:text-violet-700 rounded-lg hover:bg-slate-100 transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-emerald-700 rounded-lg hover:bg-slate-100 transition-colors"
                       title="Buka langsung di tab baru"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -458,17 +571,26 @@ export const MediaEdukasiView: React.FC<MediaEdukasiViewProps> = ({
                   )}
 
                   {isAdmin && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDeletingId(m.id);
-                        setDeletingLabel(`media edukasi "${m.judul}"`);
-                      }}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
-                      title="Hapus Media"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    isOfficialPermanent ? (
+                      <span
+                        className="p-1.5 text-emerald-600 bg-emerald-50 rounded-lg inline-flex items-center cursor-help"
+                        title="Tautan Resmi Permanen (Tidak dapat dihapus)"
+                      >
+                        <Lock className="w-3.5 h-3.5" />
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeletingId(m.id);
+                          setDeletingLabel(`media edukasi "${m.judul}"`);
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                        title="Hapus Media"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )
                   )}
                 </div>
               </div>

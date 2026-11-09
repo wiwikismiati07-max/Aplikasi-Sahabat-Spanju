@@ -44,6 +44,8 @@ import {
   initialGuru,
   initialMedia,
   initialSurvei,
+  ensurePermanentMedia,
+  PERMANENT_GOOGLE_SITES_URL,
 } from './data/initialData';
 import {
   fetchTableData,
@@ -168,7 +170,8 @@ export default function App() {
 
   const [mediaList, setMediaList] = useState<MediaEdukasiItem[]>(() => {
     const saved = localStorage.getItem('spanju_media_v1');
-    return saved ? JSON.parse(saved) : initialMedia;
+    const raw = saved ? JSON.parse(saved) : initialMedia;
+    return ensurePermanentMedia(raw);
   });
 
   const [surveiList, setSurveiList] = useState<SurveiKepuasanRecord[]>(() => {
@@ -383,9 +386,17 @@ export default function App() {
 
         const cloudMedia = await fetchTableData<MediaEdukasiItem>('media_edukasi');
         if (cloudMedia && cloudMedia.length > 0) {
-          setMediaList(cloudMedia);
+          const verified = ensurePermanentMedia(cloudMedia);
+          setMediaList(verified);
+          localStorage.setItem('spanju_media_v1', JSON.stringify(verified));
         } else if (mediaList.length > 0) {
-          bulkReplaceTableData('media_edukasi', mediaList);
+          const verified = ensurePermanentMedia(mediaList);
+          setMediaList(verified);
+          bulkReplaceTableData('media_edukasi', verified);
+        } else {
+          const verified = ensurePermanentMedia(initialMedia);
+          setMediaList(verified);
+          bulkReplaceTableData('media_edukasi', verified);
         }
 
         const cloudSurvei = await fetchTableData<SurveiKepuasanRecord>('survei_kepuasan');
@@ -643,21 +654,37 @@ export default function App() {
 
   const handleAddMedia = (data: Omit<MediaEdukasiItem, 'id'>) => {
     const newItem: MediaEdukasiItem = { ...data, id: String(Date.now()) };
-    setMediaList((prev) => [newItem, ...prev]);
+    setMediaList((prev) => ensurePermanentMedia([newItem, ...prev]));
     saveTableData('media_edukasi', newItem);
   };
 
   const handleUpdateMedia = (id: string, data: Partial<MediaEdukasiItem>) => {
     setMediaList((prev) => {
       const next = prev.map((item) => (item.id === id ? { ...item, ...data } : item));
-      const updatedItem = next.find((item) => item.id === id);
+      const verified = ensurePermanentMedia(next);
+      const updatedItem = verified.find((item) => item.id === id);
       if (updatedItem) saveTableData('media_edukasi', updatedItem);
-      return next;
+      return verified;
     });
   };
 
   const handleDeleteMedia = (id: string) => {
-    setMediaList((prev) => prev.filter((m) => m.id !== id));
+    if (
+      id === 'media-beranda-pass-temenan-official' ||
+      mediaList.some(
+        (m) =>
+          m.id === id &&
+          ((m.url && m.url.includes('sites.google.com/view/berandapasstemenanspanju')) ||
+            (m.dokumentasiMateriUrl && m.dokumentasiMateriUrl.includes('sites.google.com/view/berandapasstemenanspanju')))
+      )
+    ) {
+      alert('Tautan Portal Resmi Beranda PASS TEMENAN bersifat permanen dan tidak dapat dihapus.');
+      return;
+    }
+    setMediaList((prev) => {
+      const filtered = prev.filter((m) => m.id !== id);
+      return ensurePermanentMedia(filtered);
+    });
     deleteTableData('media_edukasi', id);
   };
 
