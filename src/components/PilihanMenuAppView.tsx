@@ -146,11 +146,11 @@ export const PilihanMenuAppView: React.FC<PilihanMenuAppViewProps> = ({
     {
       id: 'e_lapor',
       title: 'E-LAPOR PERUNDUNGAN',
-      subtitle: 'ADUAN KONFIDENSIAL & RESPON CEPAT',
+      subtitle: 'FORM ADUAN TERBUKA • HASIL TERKUNCI',
       category: 'prioritas',
-      badge: currentUser.role === 'admin' || currentUser.role === 'operator' ? 'Konfidensial' : 'Terkunci Admin',
+      badge: 'Lapor Terbuka',
       icon: AlertTriangle,
-      iconBg: currentUser.role === 'admin' || currentUser.role === 'operator' ? 'bg-rose-600' : 'bg-slate-500',
+      iconBg: 'bg-rose-600',
     },
     {
       id: 'sp_damai',

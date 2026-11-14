@@ -143,13 +143,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'e_lapor' as ActiveTab,
       label: 'E-Lapor Perundungan',
-      subtitle: 'Pengaduan & Investigasi Kasus',
+      subtitle: 'Form Aduan Terbuka • Hasil Terkunci',
       icon: AlertTriangle,
-      badge: currentUser.role === 'admin' || currentUser.role === 'operator' ? 'KONFIDENSIAL' : 'TERKUNCI',
-      badgeColor:
-        currentUser.role === 'admin' || currentUser.role === 'operator'
-          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-          : 'bg-rose-50 text-rose-700 border-rose-200',
+      badge: 'Aduan Terbuka',
+      badgeColor: 'bg-rose-50 text-rose-700 border-rose-200',
     },
     {
       id: 'sp_damai' as ActiveTab,
