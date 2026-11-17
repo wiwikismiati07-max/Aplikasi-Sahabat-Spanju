@@ -1021,6 +1021,8 @@ export default function App() {
               onClearAllSiswa={handleClearAllSiswa}
               onDeleteSiswa={handleDeleteSiswa}
               onOpenMenu={() => setActiveTab('menu_utama')}
+              onOpenLogin={() => setIsLoginModalOpen(true)}
+              currentUser={currentUser}
               isAdmin={isAdmin}
             />
           )}
@@ -1034,6 +1036,8 @@ export default function App() {
               onDeleteGuru={handleDeleteGuru}
               onRefreshGuru={handleRefreshGuruFromSupabase}
               onOpenMenu={() => setActiveTab('menu_utama')}
+              onOpenLogin={() => setIsLoginModalOpen(true)}
+              currentUser={currentUser}
               isAdmin={isAdmin}
             />
           )}

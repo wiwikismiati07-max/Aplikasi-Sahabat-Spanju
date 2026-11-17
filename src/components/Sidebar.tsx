@@ -176,12 +176,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Master Data Siswa',
       subtitle: 'Database Siswa 24 Kelas',
       icon: Users2,
+      badge: currentUser.role === 'admin' || currentUser.role === 'operator' ? '24 Kelas' : 'TERKUNCI',
+      badgeColor:
+        currentUser.role === 'admin' || currentUser.role === 'operator'
+          ? 'bg-teal-50 text-teal-800 border-teal-200'
+          : 'bg-rose-50 text-rose-700 border-rose-200',
     },
     {
       id: 'master_guru' as ActiveTab,
       label: 'Master Data Guru',
       subtitle: 'Direktori Guru & Tenaga Kependidikan',
       icon: GraduationCap,
+      badge: currentUser.role === 'admin' || currentUser.role === 'operator' ? 'PTK / TPPK' : 'TERKUNCI',
+      badgeColor:
+        currentUser.role === 'admin' || currentUser.role === 'operator'
+          ? 'bg-blue-50 text-blue-800 border-blue-200'
+          : 'bg-rose-50 text-rose-700 border-rose-200',
     },
     {
       id: 'tutorial' as ActiveTab,
