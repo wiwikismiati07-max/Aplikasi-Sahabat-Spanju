@@ -53,6 +53,7 @@ import {
   bulkReplaceTableData,
   deleteTableData,
   cleanupSupabaseStorageAndPhotos,
+  normalizeAndDedupeGuruList,
 } from './lib/api';
 
 // Components
@@ -151,21 +152,13 @@ export default function App() {
     try {
       const parsed = saved ? JSON.parse(saved) : null;
       if (Array.isArray(parsed) && parsed.length > 0) {
-        const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val) || /^[0-9a-f-]{30,}$/i.test(val);
-        const oldDeletedNames = ['bambang sutrisno', 'siti rahmawati', 'ahmad fauzi', 'dewi lestari', 'hadi prasetyo', 'nurul hidayati', 'tri wibowo'];
-        const cleaned = parsed.map((g, idx) => {
-          let name = g.nama || '';
-          if (isUuid(name)) {
-            const rowValues = Object.values(g).map(v => String(v || '').trim());
-            const foundStr = rowValues.find(v => v && v.length > 2 && /[a-zA-Z]/.test(v) && !isUuid(v) && !/^\d+[\s\d\-]*$/.test(v) && !['pns', 'pppk'].includes(v.toLowerCase()));
-            name = foundStr || `Guru ${idx + 1}`;
-          }
-          return { ...g, nama: name };
-        }).filter(g => !oldDeletedNames.includes((g.nama || '').toLowerCase().trim()));
+        const cleaned = normalizeAndDedupeGuruList(parsed);
         if (cleaned.length > 0) return cleaned;
       }
-    } catch (e) {}
-    return initialGuru;
+    } catch {
+      // fallback below
+    }
+    return normalizeAndDedupeGuruList(initialGuru);
   });
 
   const [mediaList, setMediaList] = useState<MediaEdukasiItem[]>(() => {
@@ -373,15 +366,14 @@ export default function App() {
         const cloudSiswa = await fetchTableData<SiswaMaster>('master_siswa');
         if (cloudSiswa && cloudSiswa.length > 0) {
           setSiswaList(cloudSiswa);
-        } else if (siswaList.length > 0) {
-          bulkReplaceTableData('master_siswa', siswaList);
+          localStorage.setItem('spanju_siswa_v1', JSON.stringify(cloudSiswa));
         }
 
         const cloudGuru = await fetchTableData<GuruMaster>('master_guru');
         if (cloudGuru && cloudGuru.length > 0) {
-          setGuruList(cloudGuru);
-        } else if (guruList.length > 0) {
-          bulkReplaceTableData('master_guru', guruList);
+          const cleanGuru = normalizeAndDedupeGuruList(cloudGuru);
+          setGuruList(cleanGuru);
+          localStorage.setItem('spanju_guru_v1', JSON.stringify(cleanGuru));
         }
 
         const cloudMedia = await fetchTableData<MediaEdukasiItem>('media_edukasi');
@@ -628,17 +620,18 @@ export default function App() {
   };
 
   const handleAddGuru = (guru: GuruMaster) => {
-    setGuruList((prev) => [guru, ...prev]);
+    setGuruList((prev) => normalizeAndDedupeGuruList([guru, ...prev]));
     saveTableData('master_guru', guru);
   };
 
   const handleImportBulkGuru = (imported: GuruMaster[], replaceAll = false) => {
+    const cleanImported = normalizeAndDedupeGuruList(imported);
     if (replaceAll) {
-      setGuruList(imported);
-      bulkReplaceTableData('master_guru', imported);
+      setGuruList(cleanImported);
+      bulkReplaceTableData('master_guru', cleanImported);
     } else {
-      setGuruList((prev) => [...imported, ...prev]);
-      imported.forEach((g) => saveTableData('master_guru', g));
+      setGuruList((prev) => normalizeAndDedupeGuruList([...cleanImported, ...prev]));
+      cleanImported.forEach((g) => saveTableData('master_guru', g));
     }
   };
 
@@ -650,6 +643,15 @@ export default function App() {
   const handleDeleteGuru = (id: string) => {
     setGuruList((prev) => prev.filter((g) => g.id !== id));
     deleteTableData('master_guru', id);
+  };
+
+  const handleRefreshGuruFromSupabase = async () => {
+    const cloudGuru = await fetchTableData<GuruMaster>('master_guru');
+    if (cloudGuru && cloudGuru.length > 0) {
+      const cleanGuru = normalizeAndDedupeGuruList(cloudGuru);
+      setGuruList(cleanGuru);
+      localStorage.setItem('spanju_guru_v1', JSON.stringify(cleanGuru));
+    }
   };
 
   const handleAddMedia = (data: Omit<MediaEdukasiItem, 'id'>) => {
@@ -1030,6 +1032,7 @@ export default function App() {
               onImportBulkGuru={handleImportBulkGuru}
               onClearAllGuru={handleClearAllGuru}
               onDeleteGuru={handleDeleteGuru}
+              onRefreshGuru={handleRefreshGuruFromSupabase}
               onOpenMenu={() => setActiveTab('menu_utama')}
               isAdmin={isAdmin}
             />

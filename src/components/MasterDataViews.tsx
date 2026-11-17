@@ -20,6 +20,7 @@ import {
 import { SiswaMaster, GuruMaster } from '../types';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { INITIAL_GURU, INITIAL_SISWA } from '../data/initialData';
+import { normalizeAndDedupeGuruList } from '../lib/api';
 
 /* ====================================================================
  * MASTER DATA SISWA VIEW
@@ -59,10 +60,11 @@ export const MasterSiswaView: React.FC<MasterSiswaViewProps> = ({
 
   const effectiveSiswaList = (siswaList && siswaList.length > 0 ? siswaList : INITIAL_SISWA).map((s, idx) => {
     const rawJk = s.jenisKelamin || (s as any).jeniskelamin || (s as any).jenis_kelamin || (s as any).jk || 'L';
+    const rawNisn = s.nisn || (s as any).nis || '';
     return {
       ...s,
-      nama: s.nama && s.nama.trim() !== '' ? s.nama : (INITIAL_SISWA[idx % INITIAL_SISWA.length]?.nama || `Siswa ${idx + 1}`),
-      nisn: s.nisn && s.nisn.trim() !== '' ? s.nisn : `009${idx}`,
+      nama: s.nama && s.nama.trim() !== '' ? s.nama : `Siswa ${idx + 1}`,
+      nisn: rawNisn && String(rawNisn).trim() !== '' ? String(rawNisn).trim() : '-',
       kelas: s.kelas && s.kelas.trim() !== '' ? s.kelas : '7A',
       jenisKelamin: String(rawJk).toUpperCase().startsWith('P') ? 'P' : 'L',
     };
@@ -555,6 +557,7 @@ interface MasterGuruViewProps {
   onImportBulkGuru: (list: GuruMaster[], replaceAll?: boolean) => void;
   onClearAllGuru?: () => void;
   onDeleteGuru: (id: string) => void;
+  onRefreshGuru?: () => Promise<void> | void;
   onOpenMenu: () => void;
   isAdmin: boolean;
 }
@@ -565,6 +568,7 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
   onImportBulkGuru,
   onClearAllGuru,
   onDeleteGuru,
+  onRefreshGuru,
   onOpenMenu,
   isAdmin,
 }) => {
@@ -574,6 +578,7 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingLabel, setDeletingLabel] = useState<string>('');
   const [isClearAllModalOpen, setIsClearAllModalOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Form states
   const [nama, setNama] = useState('');
@@ -581,13 +586,18 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
   const [jabatan, setJabatan] = useState('Guru Mata Pelajaran');
   const [statusKepegawaian, setStatusKepegawaian] = useState('PNS');
 
-  const effectiveGuruList = (guruList && guruList.length > 0 ? guruList : INITIAL_GURU).map((g, idx) => ({
-    ...g,
-    nama: g.nama && g.nama.trim() !== '' ? g.nama : (INITIAL_GURU[idx % INITIAL_GURU.length]?.nama || `Guru ${idx + 1}`),
-    jabatan: g.jabatan && g.jabatan.trim() !== '' ? g.jabatan : (INITIAL_GURU[idx % INITIAL_GURU.length]?.jabatan || 'Guru Mata Pelajaran'),
-    nip: g.nip && g.nip.trim() !== '' ? g.nip : '-',
-    statusKepegawaian: g.statusKepegawaian || g.status || 'PNS',
-  }));
+  const rawGuruSource = guruList && guruList.length > 0 ? guruList : INITIAL_GURU;
+  const effectiveGuruList: GuruMaster[] = normalizeAndDedupeGuruList(rawGuruSource);
+
+  const handleSyncFromSupabase = async () => {
+    if (!onRefreshGuru || isSyncing) return;
+    setIsSyncing(true);
+    try {
+      await onRefreshGuru();
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // Excel template export
   const downloadTemplateGuru = () => {
@@ -780,7 +790,7 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
         </div>
       </div>
 
-      {/* Search & Tindas Action */}
+      {/* Search & Sinkron Supabase & Tindas Action */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         <div className="relative flex-1 max-w-md">
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -793,17 +803,32 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
           />
         </div>
 
-        {isAdmin && onClearAllGuru && effectiveGuruList.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setIsClearAllModalOpen(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition-colors whitespace-nowrap cursor-pointer"
-            title="Kosongkan seluruh data guru"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-            <span>Kosongkan Data</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          {onRefreshGuru && (
+            <button
+              type="button"
+              onClick={handleSyncFromSupabase}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl border border-blue-200 transition-colors whitespace-nowrap cursor-pointer disabled:opacity-60"
+              title="Ambil ulang data guru terbaru dari database Supabase master_guru"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Menyinkronkan...' : 'Muat dari Supabase'}</span>
+            </button>
+          )}
+
+          {isAdmin && onClearAllGuru && effectiveGuruList.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsClearAllModalOpen(true)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl border border-rose-200 transition-colors whitespace-nowrap cursor-pointer"
+              title="Kosongkan seluruh data guru"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span>Kosongkan Data</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Guru Table */}
@@ -812,8 +837,9 @@ export const MasterGuruView: React.FC<MasterGuruViewProps> = ({
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
             Daftar Guru &amp; Tenaga Pendidik ({filtered.length} dari {effectiveGuruList.length} total)
           </h3>
-          <span className="text-[11px] font-semibold text-blue-700 bg-blue-100/60 px-2 py-0.5 rounded">
-            Supabase Synced TPPK
+          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-100/60 px-2.5 py-0.5 rounded">
+            <Database className="w-3 h-3 text-blue-600" />
+            <span>Supabase master_guru</span>
           </span>
         </div>
 

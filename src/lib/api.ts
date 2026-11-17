@@ -123,9 +123,100 @@ const LOWER_TO_CAMEL_MAP: Record<string, string> = {
   dutaantibullying: 'dutaAntiBullying',
   terakhirdiperiksa: 'terakhirDiperiksa',
   jeniskelamin: 'jenisKelamin',
+  jenis_kelamin: 'jenisKelamin',
   statuskepegawaian: 'statusKepegawaian',
   saranperbaikan: 'saranPerbaikan',
+  nama_guru: 'nama',
+  namaguru: 'nama',
+  nip: 'nip',
+  nis: 'nisn',
+  created_at: 'createdAt',
 };
+
+const isUuidString = (val: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim()) ||
+  /^[0-9a-f-]{30,}$/i.test(val.trim());
+
+export function inferGuruJabatan(nama: string, existingJabatan?: string): string {
+  if (existingJabatan && existingJabatan.trim() !== '') return existingJabatan.trim();
+  const upper = nama.toUpperCase();
+  if (upper.includes('NUR FADILAH')) return 'Kepala UPT SMP Negeri 7 Pasuruan';
+  if (upper.includes('WIWIK ISMIATI')) return 'Koordinator TPPK / Guru BK';
+  if (upper.includes('EKI FEBRIANI')) return 'Guru BK / Tim TPPK';
+  return 'Guru Mata Pelajaran';
+}
+
+export function inferGuruStatus(nip: string, existingStatus?: string): string {
+  if (existingStatus && existingStatus.trim() !== '') return existingStatus.trim();
+  if (!nip || nip === '-') return 'GTT / Tendik';
+  if (/\b202[1-9]21\b/.test(nip)) return 'PPPK';
+  return 'PNS';
+}
+
+export function normalizeAndDedupeGuruList(rows: any[]): any[] {
+  if (!Array.isArray(rows)) return [];
+  const seenByName = new Map<string, any>();
+
+  rows.forEach((raw, idx) => {
+    if (!raw || typeof raw !== 'object') return;
+    const rawNama =
+      raw.nama ||
+      raw.nama_guru ||
+      raw.namaLengkap ||
+      raw.nama_lengkap ||
+      raw.Nama ||
+      raw['Nama Guru'] ||
+      raw['Nama Lengkap'] ||
+      '';
+    const cleanNama = String(rawNama).replace(/\s+/g, ' ').trim();
+    if (!cleanNama || isUuidString(cleanNama)) return;
+
+    const rawNip = raw.nip ?? raw.NIP ?? raw['No. Induk'] ?? '';
+    const cleanNip = String(rawNip)
+      .replace(/[\r\n]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim() || '-';
+
+    const jabatan = inferGuruJabatan(cleanNama, raw.jabatan || raw.Jabatan);
+    const statusKepegawaian = inferGuruStatus(
+      cleanNip,
+      raw.statusKepegawaian || raw.statuskepegawaian || raw.status || raw.Status
+    );
+
+    const normalizedItem = {
+      ...raw,
+      id: String(raw.id || `guru-${idx + 1}`),
+      nama: cleanNama,
+      nip: cleanNip,
+      jabatan,
+      status: statusKepegawaian,
+      statusKepegawaian,
+      createdAt: raw.createdAt || raw.created_at || undefined,
+    };
+
+    const dedupeKey = cleanNama.toLowerCase().replace(/[.,\s]+/g, '');
+    const existing = seenByName.get(dedupeKey);
+    if (!existing) {
+      seenByName.set(dedupeKey, normalizedItem);
+    } else {
+      // Keep the richer record (prefer valid NIP & UUID id)
+      const existingHasNip = existing.nip && existing.nip !== '-';
+      const currentHasNip = cleanNip && cleanNip !== '-';
+      const existingIsUuid = isUuidString(existing.id);
+      const currentIsUuid = isUuidString(normalizedItem.id);
+      if ((!existingHasNip && currentHasNip) || (!existingIsUuid && currentIsUuid)) {
+        seenByName.set(dedupeKey, {
+          ...existing,
+          ...normalizedItem,
+          nip: currentHasNip ? cleanNip : existing.nip,
+          jabatan: normalizedItem.jabatan || existing.jabatan,
+        });
+      }
+    }
+  });
+
+  return Array.from(seenByName.values());
+}
 
 // Generic fetch table helper with lowercase mapping
 export async function fetchTableData<T>(tableName: string, fallbackData: T[] = []): Promise<T[]> {
@@ -135,7 +226,11 @@ export async function fetchTableData<T>(tableName: string, fallbackData: T[] = [
       const cached = safeStorage.getItem(`spanju_${tableName}`);
       if (cached) {
         try {
-          return JSON.parse(cached) as T[];
+          const parsedCached = JSON.parse(cached) as T[];
+          if (tableName === 'master_guru') {
+            return normalizeAndDedupeGuruList(parsedCached) as T[];
+          }
+          return parsedCached;
         } catch {
           // ignore
         }
@@ -143,34 +238,53 @@ export async function fetchTableData<T>(tableName: string, fallbackData: T[] = [
       return fallbackData;
     }
 
-    // Map lowercase column names back to camelCase
+    // Map lowercase/snake_case column names back to camelCase
     const mapped = data.map((row: Record<string, unknown>) => {
       const obj: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(row)) {
         const keyLower = k.toLowerCase();
         if (LOWER_TO_CAMEL_MAP[keyLower]) {
-          obj[LOWER_TO_CAMEL_MAP[keyLower]] = v;
-        } else {
+          const targetKey = LOWER_TO_CAMEL_MAP[keyLower];
+          if (obj[targetKey] === undefined || obj[targetKey] === null || obj[targetKey] === '') {
+            obj[targetKey] = v;
+          }
+        }
+        if (obj[k] === undefined) {
           obj[k] = v;
         }
       }
       return obj as T;
     });
 
-    safeStorage.setItem(`spanju_${tableName}`, JSON.stringify(mapped));
-    return mapped;
+    const finalRows = tableName === 'master_guru' ? (normalizeAndDedupeGuruList(mapped) as T[]) : mapped;
+    safeStorage.setItem(`spanju_${tableName}`, JSON.stringify(finalRows));
+    return finalRows;
   } catch (err) {
     console.warn(`Supabase fetch failed for ${tableName}:`, err);
     const cached = safeStorage.getItem(`spanju_${tableName}`);
     if (cached) {
       try {
-        return JSON.parse(cached) as T[];
+        const parsedCached = JSON.parse(cached) as T[];
+        if (tableName === 'master_guru') {
+          return normalizeAndDedupeGuruList(parsedCached) as T[];
+        }
+        return parsedCached;
       } catch {
         // ignore
       }
     }
     return fallbackData;
   }
+}
+
+function buildMasterGuruLiveRow(row: any): Record<string, unknown> {
+  const cleanNip = row.nip && row.nip !== '-' ? String(row.nip).trim() : null;
+  return {
+    id: row.id,
+    nama_guru: row.nama || row.nama_guru || '',
+    NIP: cleanNip,
+    created_at: row.createdAt || row.created_at || new Date().toISOString(),
+  };
 }
 
 // Generic upsert/save row helper to Supabase
@@ -195,6 +309,13 @@ export async function saveTableRow(tableName: string, row: any): Promise<boolean
 
     const { error } = await supabase.from(tableName).upsert(dbRow, { onConflict: conflictColumn });
     if (error) {
+      if (tableName === 'master_guru') {
+        const liveRow = buildMasterGuruLiveRow(row);
+        const retry = await supabase.from('master_guru').upsert(liveRow, { onConflict: 'id' });
+        if (!retry.error) return true;
+        console.warn(`Supabase master_guru fallback upsert error:`, retry.error.message);
+        return false;
+      }
       console.warn(`Supabase upsert error on ${tableName}:`, error.message);
       return false;
     }
@@ -208,8 +329,9 @@ export async function saveTableRow(tableName: string, row: any): Promise<boolean
 // Generic bulk replace/overwrite data helper (TINDAS DATA LAMA DENGAN YANG BARU)
 export async function bulkReplaceTableData(tableName: string, rows: any[]): Promise<boolean> {
   try {
+    const cleanRows = tableName === 'master_guru' ? normalizeAndDedupeGuruList(rows) : rows;
     // 1. Cache to local storage immediately
-    safeStorage.setItem(`spanju_${tableName}`, JSON.stringify(rows));
+    safeStorage.setItem(`spanju_${tableName}`, JSON.stringify(cleanRows));
 
     const conflictColumn = 'id';
 
@@ -221,8 +343,8 @@ export async function bulkReplaceTableData(tableName: string, rows: any[]): Prom
     }
 
     // 3. Upsert / Insert new data
-    if (rows.length > 0) {
-      const dbRows = rows.map((row) => {
+    if (cleanRows.length > 0) {
+      const dbRows = cleanRows.map((row) => {
         const dbRow: Record<string, unknown> = {};
         for (const [k, v] of Object.entries(row)) {
           const lowerKey = k.toLowerCase();
@@ -242,7 +364,15 @@ export async function bulkReplaceTableData(tableName: string, rows: any[]): Prom
 
       const { error } = await supabase.from(tableName).upsert(dbRows, { onConflict: conflictColumn });
       if (error) {
-        console.warn(`Supabase bulk replace error on ${tableName}:`, error.message);
+        if (tableName === 'master_guru') {
+          const liveRows = cleanRows.map(buildMasterGuruLiveRow);
+          const retry = await supabase.from('master_guru').upsert(liveRows, { onConflict: 'id' });
+          if (retry.error) {
+            console.warn(`Supabase master_guru fallback bulk replace error:`, retry.error.message);
+          }
+        } else {
+          console.warn(`Supabase bulk replace error on ${tableName}:`, error.message);
+        }
       }
     }
     return true;
